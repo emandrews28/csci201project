@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f5f5;
+      color: #222;
+    }
+    .card {
+      background: white;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+      width: min(92vw, 420px);
+      text-align: center;
+    }
+    .message {
+      font-size: 1.2rem;
+      margin: 0 0 24px;
+      min-height: 1.5em;
+    }
+    .success {
+      color: #0a7a2f;
+      font-weight: 700;
+    }
+    .button-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    button, a.button {
+      border: none;
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-size: 1rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .logout-btn {
+      background: #d93b3b;
+      color: white;
+    }
+    .logout-btn:hover { background: #bf2e2e; }
+    .hidden { display: none; }
+    .small {
+      margin-top: 18px;
+      color: #666;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Home</h1>
+    <p id="message" class="message"></p>
+
+    <div class="button-row">
+      <form id="logoutForm" action="logout" method="post">
+        <button class="logout-btn" type="submit">Logout</button>
+      </form>
+    </div>
+
+    <p class="small">This page is only for testing login and registration flow.</p>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    const messageEl = document.getElementById('message');
+
+    if (status === 'logged_in') {
+      messageEl.textContent = 'Successfully logged in.';
+      messageEl.classList.add('success');
+    } else if (status === 'registered') {
+      messageEl.textContent = 'Successfully registered.';
+      messageEl.classList.add('success');
+    } else {
+      messageEl.textContent = 'You are logged in.';
+      messageEl.classList.add('success');
+    }
+  </script>
+</body>
+</html>
