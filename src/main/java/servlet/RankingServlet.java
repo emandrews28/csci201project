@@ -2,7 +2,6 @@ package servlet;
 
 import com.google.gson.Gson;
 import dao.RankingDAO;
-import dao.ReviewDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -20,7 +19,6 @@ public class RankingServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final RankingDAO rankingDAO = new RankingDAO();
-    private final ReviewDAO reviewDAO = new ReviewDAO();
     private final Gson gson = new Gson();
 
     @Override
@@ -81,13 +79,6 @@ public class RankingServlet extends HttpServlet {
         if (rankingDAO.findByUserAndRestaurant(userId, entry.getRestaurantId()) != null) {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
             out.print("{\"error\":\"Restaurant already ranked\"}");
-            return;
-        }
-
-        // Require existing review/log before allowing ranking
-        if (reviewDAO.findByUserAndRestaurant(userId, entry.getRestaurantId()) == null) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print("{\"error\":\"You must review/log this restaurant before ranking it\"}");
             return;
         }
 

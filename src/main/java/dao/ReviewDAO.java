@@ -125,4 +125,19 @@ public class ReviewDAO {
             e.printStackTrace();
         }
     }
+    
+    public boolean deleteReview(long userId, long restaurantId) {
+        String sql = "DELETE FROM reviews WHERE user_id = ? AND restaurant_id = ?";
+        try (Connection conn = DBConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, userId);
+            stmt.setLong(2, restaurantId);
+
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
