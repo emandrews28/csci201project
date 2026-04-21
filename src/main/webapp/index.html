@@ -52,6 +52,11 @@
       color: white;
     }
     .logout-btn:hover { background: #bf2e2e; }
+    .photos-btn {
+      background: #2563eb;
+      color: white;
+    }
+    .photos-btn:hover { background: #1d4ed8; }
     .hidden { display: none; }
     .small {
       margin-top: 18px;
@@ -66,6 +71,7 @@
     <p id="message" class="message"></p>
 
     <div class="button-row">
+      <a class="button photos-btn" href="photos.html">Photos</a>
       <form id="logoutForm" action="logout" method="post">
         <button class="logout-btn" type="submit">Logout</button>
       </form>
