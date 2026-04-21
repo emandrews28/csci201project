@@ -1,29 +1,30 @@
 package servlet;
 
 import com.google.gson.Gson;
-import dao.ReviewDAO;
-import model.Review;
+import dao.RankingDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import model.RankingEntry;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
-@WebServlet("/api/reviews")
-public class ReviewServlet extends HttpServlet {
+@WebServlet("/api/rankings")
+public class RankingServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private final ReviewDAO reviewDAO = new ReviewDAO();
+
+    private final RankingDAO rankingDAO = new RankingDAO();
     private final Gson gson = new Gson();
 
-    // GET - fetch all reviews for a user
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
 
@@ -35,14 +36,14 @@ public class ReviewServlet extends HttpServlet {
         }
 
         long userId = Long.parseLong(userIdStr);
-        List<Review> reviews = reviewDAO.findByUser(userId);
-        out.print(gson.toJson(reviews));
+        List<RankingEntry> rankings = rankingDAO.findByUser(userId);
+        out.print(gson.toJson(rankings));
     }
 
-    // POST - create a new review
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
 
@@ -53,35 +54,49 @@ public class ReviewServlet extends HttpServlet {
             return;
         }
 
-        Review review = gson.fromJson(request.getReader(), Review.class);
-        review.setUserId((long) session.getAttribute("userId"));
+        RankingEntry entry = gson.fromJson(request.getReader(), RankingEntry.class);
+        long userId = (long) session.getAttribute("userId");
+        entry.setUserId(userId);
 
-        if (review.getRankingScore() < 1 || review.getRankingScore() > 10) {
+        if (entry.getRestaurantId() <= 0) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print("{\"error\":\"rankingScore must be between 1 and 10\"}");
+            out.print("{\"error\":\"restaurantId must be provided\"}");
             return;
         }
 
-        if (reviewDAO.findByUserAndRestaurant(review.getUserId(), review.getRestaurantId()) != null) {
+        if (entry.getRankPosition() <= 0) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.print("{\"error\":\"rankPosition must be greater than 0\"}");
+            return;
+        }
+
+        if (!rankingDAO.restaurantExists(entry.getRestaurantId())) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            out.print("{\"error\":\"Restaurant not found\"}");
+            return;
+        }
+
+        if (rankingDAO.findByUserAndRestaurant(userId, entry.getRestaurantId()) != null) {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
-            out.print("{\"error\":\"Review already exists. Use PUT to update.\"}");
+            out.print("{\"error\":\"Restaurant already ranked\"}");
             return;
         }
 
-        Review created = reviewDAO.createReview(review);
+        RankingEntry created = rankingDAO.createRanking(entry);
+
         if (created != null) {
             response.setStatus(HttpServletResponse.SC_CREATED);
             out.print(gson.toJson(created));
         } else {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.print("{\"error\":\"Failed to create review\"}");
+            out.print("{\"error\":\"Failed to create ranking\"}");
         }
     }
 
-    // PUT - update an existing review
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
 
@@ -92,25 +107,37 @@ public class ReviewServlet extends HttpServlet {
             return;
         }
 
-        Review review = gson.fromJson(request.getReader(), Review.class);
-        review.setUserId((long) session.getAttribute("userId"));
+        RankingEntry entry = gson.fromJson(request.getReader(), RankingEntry.class);
+        long userId = (long) session.getAttribute("userId");
 
-        if (review.getRankingScore() < 1 || review.getRankingScore() > 10) {
+        if (entry.getRestaurantId() <= 0) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print("{\"error\":\"rankingScore must be between 1 and 10\"}");
+            out.print("{\"error\":\"restaurantId must be provided\"}");
             return;
         }
 
-        boolean updated = reviewDAO.updateReview(review);
-        if (updated) {
-            out.print("{\"message\":\"Review updated successfully\"}");
-        } else {
+        if (entry.getRankPosition() <= 0) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.print("{\"error\":\"rankPosition must be greater than 0\"}");
+            return;
+        }
+
+        if (rankingDAO.findByUserAndRestaurant(userId, entry.getRestaurantId()) == null) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            out.print("{\"error\":\"Review not found\"}");
+            out.print("{\"error\":\"Ranking not found\"}");
+            return;
+        }
+
+        boolean updated = rankingDAO.updateRankingPosition(userId, entry.getRestaurantId(), entry.getRankPosition());
+
+        if (updated) {
+            out.print("{\"message\":\"Ranking updated successfully\"}");
+        } else {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            out.print("{\"error\":\"Failed to update ranking\"}");
         }
     }
-    
-    // DELETE - delete a review
+
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -135,13 +162,13 @@ public class ReviewServlet extends HttpServlet {
         long userId = (long) session.getAttribute("userId");
         long restaurantId = Long.parseLong(restaurantIdStr);
 
-        boolean deleted = reviewDAO.deleteReview(userId, restaurantId);
+        boolean deleted = rankingDAO.deleteRanking(userId, restaurantId);
 
         if (deleted) {
-            out.print("{\"message\":\"Review deleted\"}");
+            out.print("{\"message\":\"Ranking deleted successfully\"}");
         } else {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            out.print("{\"error\":\"Review not found\"}");
+            out.print("{\"error\":\"Ranking not found\"}");
         }
     }
 }
