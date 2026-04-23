@@ -34,6 +34,11 @@
     .result { padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 12px; background: white; cursor: pointer; }
     .result:hover { border-color: #0f766e; }
     .result.active { border-color: #0f766e; box-shadow: 0 0 0 1px #0f766e inset; }
+    .result-actions { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .result-actions button { padding: 6px 10px; font-size: 0.82rem; border-radius: 8px; }
+    .wishlist-btn { background: #f59e0b; color: white; }
+    .wishlist-btn:hover { background: #d97706; }
+    .wishlist-btn.added { background: #9ca3af; cursor: not-allowed; }
     .muted { color: #6b7280; font-size: 0.9rem; }
     .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; background: #e0f2fe; color: #075985; font-size: 0.78rem; margin-left: 6px; }
     .open { background: #dcfce7; color: #166534; }
@@ -50,7 +55,10 @@
 <body>
   <header>
     <h1>Nearby Restaurants Map</h1>
-    <a href="index.html">Home</a>
+    <nav style="display:flex; gap:14px;">
+      <a href="wishlist.html">Wishlist</a>
+      <a href="index.html">Home</a>
+    </nav>
   </header>
   <main>
     <section class="panel">
@@ -291,6 +299,20 @@
         const card = document.createElement('div');
         card.className = 'result';
         card.innerHTML = `<strong>${escapeHtml(restaurant.name)}</strong> ${formatBadges(restaurant)}<div class='muted'>${escapeHtml(restaurant.address || 'No address listed')}</div><div class='muted'>Rank ${formatScore(restaurant.rankScore)} · ${formatDistance(restaurant.distanceMiles)}</div>`;
+
+        const actions = document.createElement('div');
+        actions.className = 'result-actions';
+        const wishBtn = document.createElement('button');
+        wishBtn.type = 'button';
+        wishBtn.className = 'wishlist-btn';
+        wishBtn.textContent = '+ Wishlist';
+        wishBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          addToWishlist(restaurant, wishBtn);
+        });
+        actions.appendChild(wishBtn);
+        card.appendChild(actions);
+
         card.addEventListener('click', () => {
           selectRestaurant(restaurant);
           const marker = markersById.get(restaurant.restaurantId);
@@ -354,6 +376,37 @@
       if (restaurant.priceTier) badges.push(`<span class="badge">${'$'.repeat(restaurant.priceTier)}</span>`);
       return badges.join(' ');
     }
+    async function addToWishlist(restaurant, btn) {
+      const notes = window.prompt(`Notes for "${restaurant.name}" (optional):`, '');
+      if (notes === null) return;
+      try {
+        const res = await fetch('api/wishlist', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ restaurantId: restaurant.restaurantId, notes: notes || null })
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (res.status === 401) {
+          setStatus('Log in to add restaurants to your wishlist.', true);
+          return;
+        }
+        if (res.status === 409) {
+          if (btn) { btn.textContent = 'On wishlist'; btn.classList.add('added'); btn.disabled = true; }
+          setStatus('Already on your wishlist.', false);
+          return;
+        }
+        if (!res.ok) {
+          setStatus(payload.error || 'Could not add to wishlist.', true);
+          return;
+        }
+        if (btn) { btn.textContent = 'Added'; btn.classList.add('added'); btn.disabled = true; }
+        setStatus(`Added "${restaurant.name}" to wishlist.`, false);
+      } catch (err) {
+        setStatus('Network error adding to wishlist.', true);
+      }
+    }
+
     function escapeHtml(value) {
       return String(value || '').replace(/[&<>"']/g, (ch) => {
         switch (ch) {

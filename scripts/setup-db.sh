@@ -35,6 +35,10 @@ echo "== Applying sql/photos.sql"
 docker exec -i csci201_postgres psql -U postgres -d postgres \
     -v ON_ERROR_STOP=1 < "$ROOT/sql/photos.sql"
 
+echo "== Applying sql/wishlist.sql"
+docker exec -i csci201_postgres psql -U postgres -d postgres \
+    -v ON_ERROR_STOP=1 < "$ROOT/sql/wishlist.sql"
+
 echo
 echo "Postgres ready:"
 echo "  DB_URL      = jdbc:postgresql://localhost:5432/postgres"
