@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Wishlist</title>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f5f5f5; color: #1f2937; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: #0f766e; color: white; }
+    header a { color: white; text-decoration: none; font-weight: 600; margin-left: 14px; }
+    main { max-width: 860px; margin: 0 auto; padding: 20px; }
+    .card { background: white; border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.08); padding: 18px; margin-bottom: 14px; }
+    .title-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    h1 { margin: 0 0 14px; }
+    h3 { margin: 0; }
+    .muted { color: #6b7280; font-size: 0.92rem; }
+    .meta { color: #4b5563; font-size: 0.9rem; margin-top: 4px; }
+    .notes { margin-top: 10px; padding: 10px; background: #f9fafb; border-left: 3px solid #0f766e; border-radius: 6px; font-size: 0.94rem; white-space: pre-wrap; }
+    .empty-notes { color: #9ca3af; font-style: italic; }
+    .actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+    button { border: none; border-radius: 8px; padding: 8px 14px; font-size: 0.92rem; cursor: pointer; }
+    .visit-btn { background: #0f766e; color: white; }
+    .visit-btn:hover { background: #0d5f58; }
+    .edit-btn { background: #e5e7eb; color: #111827; }
+    .edit-btn:hover { background: #d1d5db; }
+    .remove-btn { background: #dc2626; color: white; }
+    .remove-btn:hover { background: #b91c1c; }
+    .status { padding: 12px; border-radius: 10px; margin-bottom: 14px; }
+    .status.error { background: #fee2e2; color: #991b1b; }
+    .status.ok { background: #dcfce7; color: #166534; }
+    .hidden { display: none; }
+    .empty { text-align: center; padding: 40px 20px; color: #6b7280; background: white; border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.08); }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #e0f2fe; color: #075985; font-size: 0.78rem; margin-left: 6px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 style="margin:0">My Wishlist</h1>
+    <nav>
+      <a href="map.html">Map</a>
+      <a href="index.html">Home</a>
+    </nav>
+  </header>
+  <main>
+    <div id="status" class="status hidden"></div>
+    <div id="list"></div>
+    <div id="empty" class="empty hidden">
+      <h3>Your wishlist is empty.</h3>
+      <p class="muted">Browse the <a href="map.html">map</a> to find restaurants to try.</p>
+    </div>
+  </main>
+
+  <script>
+    const listEl = document.getElementById('list');
+    const emptyEl = document.getElementById('empty');
+    const statusEl = document.getElementById('status');
+
+    function showStatus(msg, isError) {
+      statusEl.textContent = msg;
+      statusEl.className = 'status ' + (isError ? 'error' : 'ok');
+      if (!isError) setTimeout(() => statusEl.classList.add('hidden'), 3000);
+    }
+
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[ch]));
+    }
+
+    function priceBadge(tier) {
+      if (!tier) return '';
+      return `<span class="badge">${'$'.repeat(tier)}</span>`;
+    }
+
+    function cuisineBadge(cuisine) {
+      if (!cuisine) return '';
+      return `<span class="badge">${escapeHtml(cuisine)}</span>`;
+    }
+
+    function formatDate(ts) {
+      if (!ts) return '';
+      const d = new Date(ts);
+      if (isNaN(d)) return '';
+      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    async function loadWishlist() {
+      try {
+        const res = await fetch('api/wishlist', { credentials: 'same-origin' });
+        if (res.status === 401) {
+          showStatus('You must be logged in to view your wishlist.', true);
+          listEl.innerHTML = '';
+          emptyEl.classList.add('hidden');
+          return;
+        }
+        const data = await res.json();
+        render(data);
+      } catch (err) {
+        showStatus('Failed to load wishlist.', true);
+      }
+    }
+
+    function render(entries) {
+      listEl.innerHTML = '';
+      if (!entries || entries.length === 0) {
+        emptyEl.classList.remove('hidden');
+        return;
+      }
+      emptyEl.classList.add('hidden');
+
+      entries.forEach((entry) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="title-row">
+            <h3>${escapeHtml(entry.restaurantName || 'Restaurant #' + entry.restaurantId)} ${cuisineBadge(entry.cuisine)} ${priceBadge(entry.priceTier)}</h3>
+            <span class="muted">Added ${formatDate(entry.addedAt)}</span>
+          </div>
+          <div class="meta">${escapeHtml(entry.restaurantAddress || 'No address listed')}</div>
+          <div class="notes ${entry.notes ? '' : 'empty-notes'}">${entry.notes ? escapeHtml(entry.notes) : 'No notes'}</div>
+        `;
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+
+        const visitBtn = document.createElement('button');
+        visitBtn.type = 'button';
+        visitBtn.className = 'visit-btn';
+        visitBtn.textContent = 'Mark as visited';
+        visitBtn.addEventListener('click', () => moveToVisited(entry));
+        actions.appendChild(visitBtn);
+
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'edit-btn';
+        editBtn.textContent = 'Edit notes';
+        editBtn.addEventListener('click', () => editNotes(entry));
+        actions.appendChild(editBtn);
+
+        const rmBtn = document.createElement('button');
+        rmBtn.type = 'button';
+        rmBtn.className = 'remove-btn';
+        rmBtn.textContent = 'Remove';
+        rmBtn.addEventListener('click', () => removeEntry(entry));
+        actions.appendChild(rmBtn);
+
+        card.appendChild(actions);
+        listEl.appendChild(card);
+      });
+    }
+
+    async function removeEntry(entry) {
+      if (!confirm(`Remove "${entry.restaurantName || 'this restaurant'}" from your wishlist?`)) return;
+      try {
+        const res = await fetch('api/wishlist?restaurantId=' + encodeURIComponent(entry.restaurantId), {
+          method: 'DELETE',
+          credentials: 'same-origin'
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showStatus(payload.error || 'Failed to remove.', true);
+          return;
+        }
+        showStatus('Removed from wishlist.', false);
+        loadWishlist();
+      } catch (err) {
+        showStatus('Network error.', true);
+      }
+    }
+
+    async function moveToVisited(entry) {
+      if (!confirm(`Move "${entry.restaurantName || 'this restaurant'}" to your visited list?`)) return;
+      try {
+        const res = await fetch('api/wishlist/move-to-visited', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ restaurantId: entry.restaurantId })
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showStatus(payload.error || 'Failed to move.', true);
+          return;
+        }
+        showStatus('Moved to visited list.', false);
+        loadWishlist();
+      } catch (err) {
+        showStatus('Network error.', true);
+      }
+    }
+
+    async function editNotes(entry) {
+      const newNotes = window.prompt('Edit notes:', entry.notes || '');
+      if (newNotes === null) return;
+      try {
+        const res = await fetch('api/wishlist', {
+          method: 'PUT',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ restaurantId: entry.restaurantId, notes: newNotes })
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showStatus(payload.error || 'Failed to update notes.', true);
+          return;
+        }
+        showStatus('Notes updated.', false);
+        loadWishlist();
+      } catch (err) {
+        showStatus('Network error.', true);
+      }
+    }
+
+    loadWishlist();
+  </script>
+</body>
+</html>

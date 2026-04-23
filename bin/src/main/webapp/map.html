@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f5f5f5; color: #1f2937; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: #0f766e; color: white; }
+    header a { color: white; text-decoration: none; font-weight: 600; }
+    main { display: grid; grid-template-columns: 340px 1fr; gap: 16px; padding: 16px; min-height: calc(100vh - 64px); box-sizing: border-box; }
+    .panel, .map-shell { background: white; border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.08); overflow: hidden; }
+    .panel { padding: 16px; display: grid; gap: 14px; align-content: start; }
+    .panel h2, .panel h3 { margin: 0; }
+    label { display: block; margin: 0 0 6px; font-size: 0.9rem; font-weight: 700; }
+    input[type="number"], input[type="text"], select { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #d1d5db; font-size: 0.95rem; }
+    input[type="range"] { width: 100%; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .button-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    button { border: none; border-radius: 10px; padding: 10px 14px; font-size: 0.95rem; cursor: pointer; }
+    .primary { background: #0f766e; color: white; }
+    .secondary { background: #e5e7eb; color: #111827; }
+    .status { font-size: 0.92rem; min-height: 1.2em; color: #4b5563; }
+    .status.error { color: #b91c1c; }
+    .status.ok { color: #047857; }
+    .map-shell { position: relative; display: flex; flex-direction: column; min-height: 680px; }
+    #map { flex: 1; min-height: 540px; }
+    .sidebar-mini { padding: 12px 16px; border-top: 1px solid #e5e7eb; background: #fafafa; }
+    .results { display: grid; gap: 10px; margin-top: 12px; max-height: 320px; overflow: auto; }
+    .result { padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 12px; background: white; cursor: pointer; }
+    .result:hover { border-color: #0f766e; }
+    .result.active { border-color: #0f766e; box-shadow: 0 0 0 1px #0f766e inset; }
+    .result-actions { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .result-actions button { padding: 6px 10px; font-size: 0.82rem; border-radius: 8px; }
+    .wishlist-btn { background: #f59e0b; color: white; }
+    .wishlist-btn:hover { background: #d97706; }
+    .wishlist-btn.added { background: #9ca3af; cursor: not-allowed; }
+    .muted { color: #6b7280; font-size: 0.9rem; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; background: #e0f2fe; color: #075985; font-size: 0.78rem; margin-left: 6px; }
+    .open { background: #dcfce7; color: #166534; }
+    .view-toggle { display: flex; gap: 8px; }
+    .view-toggle button.active { background: #0f766e; color: white; }
+    .field-help { font-size: 0.82rem; color: #6b7280; margin-top: 4px; }
+    .popup { min-width: 180px; }
+    .popup strong { display: block; margin-bottom: 4px; }
+    .popup .small { font-size: 0.85rem; color: #4b5563; }
+    .hidden { display: none; }
+    @media (max-width: 960px) { main { grid-template-columns: 1fr; } .map-shell { min-height: 560px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Nearby Restaurants Map</h1>
+    <nav style="display:flex; gap:14px;">
+      <a href="wishlist.html">Wishlist</a>
+      <a href="index.html">Home</a>
+    </nav>
+  </header>
+  <main>
+    <section class="panel">
+      <div>
+        <h2>Search</h2>
+        <p class="muted">Guest users see global ranking scores. Logged-in users automatically get ranking boosts from their own list.</p>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="lat">Latitude</label>
+          <input id="lat" type="number" step="0.000001" />
+        </div>
+        <div>
+          <label for="lng">Longitude</label>
+          <input id="lng" type="number" step="0.000001" />
+        </div>
+      </div>
+      <div class="button-row">
+        <button id="geoBtn" class="secondary" type="button">Use my location</button>
+        <button id="searchBtn" class="primary" type="button">Refresh map</button>
+      </div>
+      <div id="geoStatus" class="status"></div>
+
+      <div>
+        <label for="radius">Radius: <span id="radiusValue">10</span> miles</label>
+        <input id="radius" type="range" min="1" max="25" value="10" />
+      </div>
+
+      <div>
+        <label for="cuisines">Cuisine filters</label>
+        <input id="cuisines" type="text" placeholder="comma-separated, e.g. sushi, italian" />
+        <div class="field-help">Leave blank to show all cuisines.</div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="minRank">Minimum rank score</label>
+          <input id="minRank" type="number" step="0.1" min="0" placeholder="0" />
+        </div>
+        <div>
+          <label for="openNow">Open now</label>
+          <select id="openNow">
+            <option value="">Any</option>
+            <option value="true">Only open</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label>Price tiers</label>
+        <div class="button-row">
+          <label><input type="checkbox" class="price" value="1" /> $</label>
+          <label><input type="checkbox" class="price" value="2" /> $$</label>
+          <label><input type="checkbox" class="price" value="3" /> $$$</label>
+          <label><input type="checkbox" class="price" value="4" /> $$$$</label>
+        </div>
+      </div>
+
+      <div>
+        <label>View</label>
+        <div class="view-toggle">
+          <button id="mapViewBtn" class="active secondary" type="button">Map</button>
+          <button id="listViewBtn" class="secondary" type="button">List</button>
+        </div>
+      </div>
+
+      <div class="status" id="countStatus"></div>
+      <div id="results" class="results hidden"></div>
+    </section>
+
+    <section class="map-shell">
+      <div id="map"></div>
+      <div class="sidebar-mini">
+        <div id="selectedTitle"><strong>Select a restaurant marker</strong></div>
+        <div id="selectedMeta" class="muted">Marker details appear here.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script>
+    const DEFAULT_CENTER = [34.0224, -118.2851];
+    const map = L.map('map', { zoomControl: true }).setView(DEFAULT_CENTER, 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const clusterGroup = L.markerClusterGroup();
+    const markersById = new Map();
+    const resultsEl = document.getElementById('results');
+    const countStatus = document.getElementById('countStatus');
+    const geoStatus = document.getElementById('geoStatus');
+    const selectedTitle = document.getElementById('selectedTitle');
+    const selectedMeta = document.getElementById('selectedMeta');
+    const latEl = document.getElementById('lat');
+    const lngEl = document.getElementById('lng');
+    const radiusEl = document.getElementById('radius');
+    const radiusValue = document.getElementById('radiusValue');
+    const cuisinesEl = document.getElementById('cuisines');
+    const minRankEl = document.getElementById('minRank');
+    const openNowEl = document.getElementById('openNow');
+    const mapViewBtn = document.getElementById('mapViewBtn');
+    const listViewBtn = document.getElementById('listViewBtn');
+    const searchBtn = document.getElementById('searchBtn');
+    const geoBtn = document.getElementById('geoBtn');
+    let activeRestaurantId = null;
+    let currentView = 'map';
+    let currentRestaurants = [];
+
+    latEl.value = DEFAULT_CENTER[0];
+    lngEl.value = DEFAULT_CENTER[1];
+
+    radiusEl.addEventListener('input', () => {
+      radiusValue.textContent = radiusEl.value;
+      scheduleRefresh();
+    });
+    [cuisinesEl, minRankEl, openNowEl].forEach(el => el.addEventListener('change', scheduleRefresh));
+    [latEl, lngEl].forEach(el => el.addEventListener('change', scheduleRefresh));
+    searchBtn.addEventListener('click', refreshRestaurants);
+    geoBtn.addEventListener('click', requestLocation);
+    mapViewBtn.addEventListener('click', () => setView('map'));
+    listViewBtn.addEventListener('click', () => setView('list'));
+    map.on('moveend zoomend', scheduleRefresh);
+
+    function setView(view) {
+      currentView = view;
+      mapViewBtn.classList.toggle('active', view === 'map');
+      listViewBtn.classList.toggle('active', view === 'list');
+      if (view === 'map') {
+        map.getContainer().style.display = 'block';
+        resultsEl.classList.add('hidden');
+        setTimeout(() => map.invalidateSize(), 0);
+      } else {
+        map.getContainer().style.display = 'none';
+        resultsEl.classList.remove('hidden');
+      }
+    }
+
+    function requestLocation() {
+      if (!navigator.geolocation) {
+        setStatus('Your browser does not support geolocation.', true);
+        return;
+      }
+      setStatus('Requesting location...', false);
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const { latitude, longitude } = pos.coords;
+        latEl.value = latitude.toFixed(6);
+        lngEl.value = longitude.toFixed(6);
+        map.setView([latitude, longitude], Math.max(map.getZoom(), 13));
+        setStatus('Using your current location.', false);
+        refreshRestaurants();
+      }, () => {
+        setStatus('Location permission denied. Enter latitude and longitude manually.', true);
+      }, { enableHighAccuracy: true, timeout: 8000 });
+    }
+
+    let refreshTimer = null;
+    function scheduleRefresh() {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(refreshRestaurants, 250);
+    }
+
+    function setStatus(message, isError) {
+      geoStatus.textContent = message;
+      geoStatus.className = isError ? 'status error' : 'status ok';
+    }
+
+    function selectedPriceTiers() {
+      return [...document.querySelectorAll('.price:checked')].map(el => el.value);
+    }
+
+    function getBoundsParams() {
+      const bounds = map.getBounds();
+      return {
+        boundsNorth: bounds.getNorth(),
+        boundsSouth: bounds.getSouth(),
+        boundsEast: bounds.getEast(),
+        boundsWest: bounds.getWest()
+      };
+    }
+
+    async function refreshRestaurants() {
+      const lat = parseFloat(latEl.value);
+      const lng = parseFloat(lngEl.value);
+      if (Number.isNaN(lat) || Number.isNaN(lng)) {
+        setStatus('Enter a valid latitude and longitude first.', true);
+        return;
+      }
+
+      const params = new URLSearchParams();
+      params.set('lat', lat);
+      params.set('lng', lng);
+      params.set('radius_miles', radiusEl.value);
+      const minRank = minRankEl.value.trim();
+      if (minRank) params.set('min_rank', minRank);
+      const openNow = openNowEl.value;
+      if (openNow) params.set('open_now', openNow);
+      cuisinesEl.value.split(',').map(v => v.trim()).filter(Boolean).forEach(v => params.append('cuisines', v));
+      selectedPriceTiers().forEach(v => params.append('priceTiers', v));
+      const bounds = getBoundsParams();
+      Object.entries(bounds).forEach(([k, v]) => params.set(k, v));
+
+      const response = await fetch(`api/map/restaurants?${params.toString()}`, { credentials: 'same-origin' });
+      const payload = await response.json();
+      if (!response.ok) {
+        setStatus(payload.error || 'Failed to load restaurants.', true);
+        return;
+      }
+
+      renderRestaurants(payload);
+      setStatus(`Loaded ${payload.length} restaurants.`, false);
+    }
+
+    function renderRestaurants(restaurants) {
+      currentRestaurants = restaurants;
+      activeRestaurantId = null;
+      clusterGroup.clearLayers();
+      markersById.clear();
+      resultsEl.innerHTML = '';
+
+      restaurants.forEach((restaurant) => {
+        const marker = L.marker([restaurant.latitude, restaurant.longitude]);
+        marker.bindPopup(buildPopupHtml(restaurant));
+        marker.on('click', () => selectRestaurant(restaurant));
+        markersById.set(restaurant.restaurantId, marker);
+        clusterGroup.addLayer(marker);
+      });
+
+      if (map.hasLayer(clusterGroup)) {
+        map.removeLayer(clusterGroup);
+      }
+      map.addLayer(clusterGroup);
+
+      restaurants.forEach((restaurant) => {
+        const card = document.createElement('div');
+        card.className = 'result';
+        card.innerHTML = `<strong>${escapeHtml(restaurant.name)}</strong> ${formatBadges(restaurant)}<div class='muted'>${escapeHtml(restaurant.address || 'No address listed')}</div><div class='muted'>Rank ${formatScore(restaurant.rankScore)} · ${formatDistance(restaurant.distanceMiles)}</div>`;
+
+        const actions = document.createElement('div');
+        actions.className = 'result-actions';
+        const wishBtn = document.createElement('button');
+        wishBtn.type = 'button';
+        wishBtn.className = 'wishlist-btn';
+        wishBtn.textContent = '+ Wishlist';
+        wishBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          addToWishlist(restaurant, wishBtn);
+        });
+        actions.appendChild(wishBtn);
+        card.appendChild(actions);
+
+        card.addEventListener('click', () => {
+          selectRestaurant(restaurant);
+          const marker = markersById.get(restaurant.restaurantId);
+          if (marker) {
+            map.panTo(marker.getLatLng());
+            marker.openPopup();
+          }
+        });
+        resultsEl.appendChild(card);
+      });
+
+      countStatus.textContent = `${restaurants.length} restaurants in view.`;
+      if (restaurants.length === 0) {
+        selectedTitle.innerHTML = '<strong>No restaurants found</strong>';
+        selectedMeta.textContent = 'Try widening the radius or moving the map.';
+      } else {
+        selectRestaurant(restaurants[0]);
+      }
+      if (currentView === 'list') {
+        setView('list');
+      }
+    }
+
+    function selectRestaurant(restaurant) {
+      activeRestaurantId = restaurant.restaurantId;
+      selectedTitle.innerHTML = `<strong>${escapeHtml(restaurant.name)}</strong>`;
+      selectedMeta.innerHTML = [
+        restaurant.address ? escapeHtml(restaurant.address) : 'No address listed',
+        `Rank score: ${formatScore(restaurant.rankScore)}`,
+        `Distance: ${formatDistance(restaurant.distanceMiles)}`,
+        restaurant.cuisine ? `Cuisine: ${escapeHtml(restaurant.cuisine)}` : null,
+        restaurant.priceTier ? `Price tier: ${'$'.repeat(restaurant.priceTier)}` : null,
+        restaurant.openNow === false ? 'Currently closed' : 'Open now data available'
+      ].filter(Boolean).join('<br/>');
+
+      document.querySelectorAll('.result').forEach(card => card.classList.remove('active'));
+      const activeIndex = currentRestaurants.findIndex(item => item.restaurantId === activeRestaurantId);
+      if (activeIndex >= 0 && resultsEl.children[activeIndex]) {
+        resultsEl.children[activeIndex].classList.add('active');
+      }
+    }
+
+    function buildPopupHtml(restaurant) {
+      const price = restaurant.priceTier ? '$'.repeat(restaurant.priceTier) : 'n/a';
+      return `
+        <div class="popup">
+          <strong>${escapeHtml(restaurant.name)}</strong>
+          <div class="small">Rank score: ${formatScore(restaurant.rankScore)}</div>
+          <div class="small">Distance: ${formatDistance(restaurant.distanceMiles)}</div>
+          <div class="small">Cuisine: ${escapeHtml(restaurant.cuisine || 'n/a')}</div>
+          <div class="small">Price: ${price}</div>
+          <div class="small">${escapeHtml(restaurant.address || 'No address listed')}</div>
+        </div>`;
+    }
+
+    function formatScore(score) { return Number(score || 0).toFixed(2); }
+    function formatDistance(distance) { return `${Number(distance || 0).toFixed(2)} mi`; }
+    function formatBadges(restaurant) {
+      const badges = [];
+      if (restaurant.openNow !== false) badges.push('<span class="badge open">Open</span>');
+      if (restaurant.priceTier) badges.push(`<span class="badge">${'$'.repeat(restaurant.priceTier)}</span>`);
+      return badges.join(' ');
+    }
+    async function addToWishlist(restaurant, btn) {
+      const notes = window.prompt(`Notes for "${restaurant.name}" (optional):`, '');
+      if (notes === null) return;
+      try {
+        const res = await fetch('api/wishlist', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ restaurantId: restaurant.restaurantId, notes: notes || null })
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (res.status === 401) {
+          setStatus('Log in to add restaurants to your wishlist.', true);
+          return;
+        }
+        if (res.status === 409) {
+          if (btn) { btn.textContent = 'On wishlist'; btn.classList.add('added'); btn.disabled = true; }
+          setStatus('Already on your wishlist.', false);
+          return;
+        }
+        if (!res.ok) {
+          setStatus(payload.error || 'Could not add to wishlist.', true);
+          return;
+        }
+        if (btn) { btn.textContent = 'Added'; btn.classList.add('added'); btn.disabled = true; }
+        setStatus(`Added "${restaurant.name}" to wishlist.`, false);
+      } catch (err) {
+        setStatus('Network error adding to wishlist.', true);
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"']/g, (ch) => {
+        switch (ch) {
+          case '&': return '&amp;';
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '"': return '&quot;';
+          case "'": return '&#39;';
+          default: return ch;
+        }
+      });
+    }
+
+    setView('map');
+    refreshRestaurants();
+  </script>
+</body>
+</html>
