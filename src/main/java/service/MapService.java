@@ -1,156 +1,200 @@
 package service;
 
 import dao.RankingDAO;
-import dao.RestaurantDAO;
-import model.BoundingBox;
-import model.MapCluster;
+import dao.ReviewDAO;
+import db.DBConnectionManager;
 import model.MapFilterParams;
 import model.MapResult;
 import model.RankingEntry;
-import model.Restaurant;
+import model.Review;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
 
+/**
+ * MapService for the current repo structure.
+ *
+ * Assumptions:
+ * - restaurants table contains:
+ *   restaurant_id, name, latitude, longitude, avg_rating, review_count
+ * - reviews table contains ranking_score
+ * - rankings table contains rank_position
+ *
+ * Notes:
+ * - cuisine / price / openNow are intentionally ignored here because the current repo schema
+ *   does not expose those columns yet.
+ * - Personalized scoring is based on the current user's rankings and reviews.
+ */
 public class MapService {
+    private static final double EARTH_RADIUS_MILES = 3958.8;
+    private static final double MAX_RADIUS_MILES = 25.0;
 
-    private final RestaurantDAO restaurantDAO = new RestaurantDAO();
     private final RankingDAO rankingDAO = new RankingDAO();
+    private final ReviewDAO reviewDAO = new ReviewDAO();
 
     public List<MapResult> getNearbyRestaurants(MapFilterParams filters, Long userId) {
-        if (filters == null || !filters.validate()) return List.of();
-
-        double radius = filters.getRadiusMiles() == null ? 25.0 : filters.getRadiusMiles();
-        double centerLat = filters.getUserLat();
-        double centerLng = filters.getUserLng();
-
-        List<Restaurant> restaurants;
-        BoundingBox bounds = filters.getBounds();
-        if (bounds != null) {
-            restaurants = restaurantDAO.findWithinBounds(bounds.getNorth(), bounds.getSouth(), bounds.getEast(), bounds.getWest());
-        } else {
-            restaurants = restaurantDAO.findNearby(centerLat, centerLng, radius);
+        if (filters == null) {
+            return Collections.emptyList();
         }
 
-        Map<Long, Double> personalizedScores = userId == null ? Map.of() : buildPersonalizedScores(userId);
+        Double userLat = filters.getUserLat();
+        Double userLng = filters.getUserLng();
+        Double radiusMiles = filters.getRadiusMiles();
+        Double minRank = filters.getMinRank();
+
+        if (radiusMiles != null && radiusMiles > MAX_RADIUS_MILES) {
+            radiusMiles = MAX_RADIUS_MILES;
+        }
+
+        Map<Long, Double> personalBoost = (userId == null) ? Collections.emptyMap() : buildPersonalBoost(userId);
         List<MapResult> results = new ArrayList<>();
 
-        for (Restaurant restaurant : restaurants) {
-            if (restaurant.getLatitude() == null || restaurant.getLongitude() == null) continue;
+        StringBuilder sql = new StringBuilder("""
+            SELECT restaurant_id, name, latitude, longitude,
+                   COALESCE(avg_rating, 0) AS avg_rating,
+                   COALESCE(review_count, 0) AS review_count
+            FROM restaurants
+            WHERE latitude IS NOT NULL
+              AND longitude IS NOT NULL
+            """);
 
-            double distance = computeDistance(centerLat, centerLng, restaurant.getLatitude(), restaurant.getLongitude());
-            if (distance > radius) continue;
-            if (!matchesCuisine(filters, restaurant)) continue;
-            if (!matchesPriceTier(filters, restaurant)) continue;
-            if (!matchesOpenNow(filters, restaurant)) continue;
+        List<Object> params = new ArrayList<>();
 
-            double rankScore = computeRankScore(restaurant, personalizedScores.get(restaurant.getRestaurantId()));
-            if (filters.getMinRank() != null && rankScore < filters.getMinRank()) continue;
+        // Coarse bounding box to reduce rows when location is known.
+        if (userLat != null && userLng != null && radiusMiles != null && radiusMiles > 0) {
+            double latDelta = radiusMiles / 69.0;
+            double lngDelta = radiusMiles / Math.max(1e-9, (69.0 * Math.cos(Math.toRadians(userLat))));
 
-            MapResult result = new MapResult();
-            result.setRestaurantId(restaurant.getRestaurantId());
-            result.setName(restaurant.getName());
-            result.setLatitude(restaurant.getLatitude());
-            result.setLongitude(restaurant.getLongitude());
-            result.setRankScore(rankScore);
-            result.setDistanceMiles(distance);
-            result.setCuisine(restaurant.getCuisine());
-            result.setPriceTier(restaurant.getPriceTier());
-            result.setAddress(restaurant.getAddress());
-            result.setOpenNow(restaurant.getOpenNow());
-            results.add(result);
+            sql.append(" AND latitude BETWEEN ? AND ? ");
+            sql.append(" AND longitude BETWEEN ? AND ? ");
+            params.add(userLat - latDelta);
+            params.add(userLat + latDelta);
+            params.add(userLng - lngDelta);
+            params.add(userLng + lngDelta);
         }
 
-        results.sort(Comparator.comparingDouble(MapResult::getRankScore).reversed()
-                .thenComparingDouble(MapResult::getDistanceMiles)
-                .thenComparing(MapResult::getName, Comparator.nullsLast(String::compareToIgnoreCase)));
+        sql.append(" ORDER BY COALESCE(avg_rating, 0) DESC, review_count DESC, restaurant_id ASC ");
+
+        try (Connection conn = DBConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < params.size(); i++) {
+                Object value = params.get(i);
+                if (value instanceof Double d) {
+                    stmt.setDouble(i + 1, d);
+                } else if (value instanceof Integer n) {
+                    stmt.setInt(i + 1, n);
+                } else if (value instanceof Long l) {
+                    stmt.setLong(i + 1, l);
+                } else {
+                    stmt.setObject(i + 1, value);
+                }
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    long restaurantId = rs.getLong("restaurant_id");
+                    String name = rs.getString("name");
+                    double latitude = rs.getDouble("latitude");
+                    double longitude = rs.getDouble("longitude");
+                    double avgRating = rs.getDouble("avg_rating");
+                    int reviewCount = rs.getInt("review_count");
+
+                    double distanceMiles = Double.NaN;
+                    if (userLat != null && userLng != null) {
+                        distanceMiles = computeDistanceMiles(userLat, userLng, latitude, longitude);
+                        if (radiusMiles != null && distanceMiles > radiusMiles) {
+                            continue;
+                        }
+                    }
+
+                    double finalScore = clampScore(avgRating + personalBoost.getOrDefault(restaurantId, 0.0));
+
+                    if (minRank != null && finalScore < minRank) {
+                        continue;
+                    }
+
+                    MapResult result = new MapResult();
+                    result.setRestaurantId(restaurantId);
+                    result.setName(name);
+                    result.setLatitude(latitude);
+                    result.setLongitude(longitude);
+                    result.setRankScore(finalScore);
+                    result.setDistanceMiles(distanceMiles);
+
+                    results.add(result);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+
+        results.sort((a, b) -> {
+            int byScore = Double.compare(b.getRankScore(), a.getRankScore());
+            if (byScore != 0) return byScore;
+
+            boolean aHasDistance = !Double.isNaN(a.getDistanceMiles());
+            boolean bHasDistance = !Double.isNaN(b.getDistanceMiles());
+            if (aHasDistance && bHasDistance) {
+                int byDistance = Double.compare(a.getDistanceMiles(), b.getDistanceMiles());
+                if (byDistance != 0) return byDistance;
+            } else if (aHasDistance) {
+                return -1;
+            } else if (bHasDistance) {
+                return 1;
+            }
+
+            return a.getName().compareToIgnoreCase(b.getName());
+        });
+
         return results;
     }
 
-    public List<MapResult> applyFilters(List<MapResult> restaurants, MapFilterParams filters) {
-        if (restaurants == null || filters == null) return List.of();
-        List<MapResult> filtered = new ArrayList<>();
-        for (MapResult restaurant : restaurants) {
-            if (filters.getMinRank() != null && restaurant.getRankScore() < filters.getMinRank()) continue;
-            if (filters.getPriceTiers() != null && !filters.getPriceTiers().isEmpty()) {
-                Integer tier = restaurant.getPriceTier();
-                if (tier == null || !filters.getPriceTiers().contains(tier)) continue;
+    private Map<Long, Double> buildPersonalBoost(long userId) {
+        Map<Long, Double> boostByRestaurant = new HashMap<>();
+
+        List<RankingEntry> rankings = rankingDAO.findByUser(userId);
+        int rankedCount = rankings.size();
+
+        if (rankedCount > 0) {
+            for (RankingEntry entry : rankings) {
+                // Higher-ranked restaurants get a larger boost.
+                double normalized = (rankedCount - entry.getRankPosition() + 1.0) / rankedCount;
+                double boost = normalized * 1.5;
+                boostByRestaurant.merge(entry.getRestaurantId(), boost, Double::sum);
             }
-            if (filters.getCuisines() != null && !filters.getCuisines().isEmpty()) {
-                String cuisine = restaurant.getCuisine();
-                if (cuisine == null || filters.getCuisines().stream().noneMatch(value -> value != null && value.equalsIgnoreCase(cuisine))) continue;
-            }
-            filtered.add(restaurant);
         }
-        return filtered;
+
+        List<Review> reviews = reviewDAO.findByUser(userId);
+        for (Review review : reviews) {
+            double boost = (review.getRankingScore() / 10.0) * 0.75;
+            boostByRestaurant.merge(review.getRestaurantId(), boost, Double::sum);
+        }
+
+        return boostByRestaurant;
     }
 
-    public double computeDistance(double lat1, double lng1, double lat2, double lng2) {
-        final double earthRadiusMiles = 3958.7613;
+    private double computeDistanceMiles(double lat1, double lng1, double lat2, double lng2) {
         double dLat = Math.toRadians(lat2 - lat1);
         double dLng = Math.toRadians(lng2 - lng1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        return earthRadiusMiles * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        double a = Math.sin(dLat / 2.0) * Math.sin(dLat / 2.0)
+                + Math.cos(Math.toRadians(lat1))
+                * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLng / 2.0)
+                * Math.sin(dLng / 2.0);
+
+        double c = 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(1.0 - a));
+        return EARTH_RADIUS_MILES * c;
     }
 
-    public List<MapCluster> clusterMarkers(List<MapResult> restaurants) {
-        if (restaurants == null || restaurants.isEmpty()) return List.of();
-        Map<String, MapCluster> clusters = new HashMap<>();
-        for (MapResult restaurant : restaurants) {
-            String key = gridKey(restaurant.getLatitude(), restaurant.getLongitude());
-            clusters.computeIfAbsent(key, ignored -> new MapCluster()).addRestaurant(restaurant);
-        }
-        return new ArrayList<>(clusters.values());
-    }
-
-    private String gridKey(double latitude, double longitude) {
-        double roundedLat = Math.round(latitude * 20.0) / 20.0;
-        double roundedLng = Math.round(longitude * 20.0) / 20.0;
-        return String.format(Locale.ROOT, "%.2f:%.2f", roundedLat, roundedLng);
-    }
-
-    private boolean matchesCuisine(MapFilterParams filters, Restaurant restaurant) {
-        if (filters.getCuisines() == null || filters.getCuisines().isEmpty()) return true;
-        if (restaurant.getCuisine() == null) return false;
-        return filters.getCuisines().stream().anyMatch(value -> value != null && value.equalsIgnoreCase(restaurant.getCuisine()));
-    }
-
-    private boolean matchesPriceTier(MapFilterParams filters, Restaurant restaurant) {
-        if (filters.getPriceTiers() == null || filters.getPriceTiers().isEmpty()) return true;
-        Integer tier = restaurant.getPriceTier();
-        return tier != null && filters.getPriceTiers().contains(tier);
-    }
-
-    private boolean matchesOpenNow(MapFilterParams filters, Restaurant restaurant) {
-        if (filters.getOpenNow() == null || !filters.getOpenNow()) return true;
-        Boolean openNow = restaurant.getOpenNow();
-        return openNow == null || openNow;
-    }
-
-    private double computeRankScore(Restaurant restaurant, Double personalizedBoost) {
-        double rating = restaurant.getAvgRating() == null ? 0.0 : restaurant.getAvgRating().doubleValue();
-        int reviewCount = restaurant.getReviewCount() == null ? 0 : restaurant.getReviewCount();
-        double popularity = reviewCount <= 0 ? 0.0 : Math.min(1.5, Math.log10(reviewCount + 1) * 0.5);
-        double personal = personalizedBoost == null ? 0.0 : personalizedBoost * 2.5;
-        return rating + popularity + personal;
-    }
-
-    private Map<Long, Double> buildPersonalizedScores(long userId) {
-        List<RankingEntry> entries = rankingDAO.findByUser(userId);
-        if (entries.isEmpty()) return Map.of();
-
-        int total = entries.size();
-        Map<Long, Double> scores = new HashMap<>();
-        for (RankingEntry entry : entries) {
-            double normalized = total == 1 ? 1.0 : (double) (total - entry.getRankPosition()) / (double) (total - 1);
-            scores.put(entry.getRestaurantId(), normalized);
-        }
-        return scores;
+    private double clampScore(double score) {
+        if (score < 0.0) return 0.0;
+        if (score > 10.0) return 10.0;
+        return score;
     }
 }
