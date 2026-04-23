@@ -2,6 +2,10 @@ package model;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.List;
+
+// for search & filtering
+import model.Cuisine;
 
 public class Restaurant {
     private long restaurantId;
@@ -16,6 +20,12 @@ public class Restaurant {
     private Integer reviewCount;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+
+    // for search & filtering
+    private String googlePlaceId;
+    private Double rankScore;
+    private Double distanceMiles;
+    private List<Cuisine> cuisines;
 
     public long getRestaurantId() { return restaurantId; }
     public void setRestaurantId(long restaurantId) { this.restaurantId = restaurantId; }
@@ -41,4 +51,14 @@ public class Restaurant {
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
     public Timestamp getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+
+    // for search & filtering
+    public String getGooglePlaceId() { return googlePlaceId; }
+    public void setGooglePlaceId(String googlePlaceId) { this.googlePlaceId = googlePlaceId; }
+    public Double getRankScore() { return rankScore; }
+    public void setRankScore(Double rankScore) { this.rankScore = rankScore; }
+    public Double getDistanceMiles() { return distanceMiles; }
+    public void setDistanceMiles(Double distanceMiles) { this.distanceMiles = distanceMiles; }
+    public List<Cuisine> getCuisines() { return cuisines; }
+    public void setCuisines(List<Cuisine> cuisines) { this.cuisines = cuisines; }
 }
