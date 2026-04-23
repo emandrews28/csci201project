@@ -57,6 +57,16 @@
       color: white;
     }
     .photos-btn:hover { background: #1d4ed8; }
+    .wishlist-btn {
+      background: #f59e0b;
+      color: white;
+    }
+    .wishlist-btn:hover { background: #d97706; }
+    .map-btn {
+      background: #0f766e;
+      color: white;
+    }
+    .map-btn:hover { background: #0d5f58; }
     .hidden { display: none; }
     .small {
       margin-top: 18px;
@@ -71,6 +81,8 @@
     <p id="message" class="message"></p>
 
     <div class="button-row">
+      <a class="button map-btn" href="map.html">Map</a>
+      <a class="button wishlist-btn" href="wishlist.html">Wishlist</a>
       <a class="button photos-btn" href="photos.html">Photos</a>
       <form id="logoutForm" action="logout" method="post">
         <button class="logout-btn" type="submit">Logout</button>
