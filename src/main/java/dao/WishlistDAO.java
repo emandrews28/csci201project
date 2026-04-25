@@ -25,7 +25,7 @@ public class WishlistDAO {
     public List<Wishlist> findByUser(long userId) {
         String sql = """
                 SELECT w.wishlist_id, w.user_id, w.restaurant_id, w.notes, w.added_at,
-                       r.name AS restaurant_name, r.address, r.cuisine, r.price_tier
+                       r.name AS restaurant_name, r.address, r.cuisine_type AS cuisine, r.price_tier
                 FROM wishlist w
                 JOIN restaurants r ON r.restaurant_id = w.restaurant_id
                 WHERE w.user_id = ?

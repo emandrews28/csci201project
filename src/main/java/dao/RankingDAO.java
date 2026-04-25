@@ -20,15 +20,35 @@ public class RankingDAO {
         entry.setRankPosition(rs.getInt("rank_position"));
         entry.setCreatedAt(rs.getTimestamp("created_at"));
         entry.setUpdatedAt(rs.getTimestamp("updated_at"));
+
+        try {
+            entry.setRestaurantName(rs.getString("restaurant_name"));
+            entry.setRestaurantAddress(rs.getString("restaurant_address"));
+            entry.setCuisine(rs.getString("cuisine"));
+            int priceTier = rs.getInt("price_tier");
+            entry.setPriceTier(rs.wasNull() ? null : priceTier);
+        } catch (SQLException ignored) {
+        }
+
         return entry;
     }
 
     public List<RankingEntry> findByUser(long userId) {
         String sql = """
-                SELECT ranking_id, user_id, restaurant_id, rank_position, created_at, updated_at
-                FROM rankings
-                WHERE user_id = ?
-                ORDER BY rank_position
+                SELECT rk.ranking_id,
+                       rk.user_id,
+                       rk.restaurant_id,
+                       rk.rank_position,
+                       rk.created_at,
+                       rk.updated_at,
+                       r.name AS restaurant_name,
+                       r.address AS restaurant_address,
+                       r.cuisine_type AS cuisine,
+                       r.price_tier
+                FROM rankings rk
+                LEFT JOIN restaurants r ON r.restaurant_id = rk.restaurant_id
+                WHERE rk.user_id = ?
+                ORDER BY rk.rank_position
                 """;
 
         List<RankingEntry> rankings = new ArrayList<>();

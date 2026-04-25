@@ -158,7 +158,20 @@ public class RestaurantSearchServlet extends HttpServlet {
             if (limitStr != null) params.setLimit(Math.min(50, Math.max(1, Integer.parseInt(limitStr))));
         } catch (NumberFormatException ignored) {}
 
-        List<Restaurant> results = restaurantDAO.search(params, userId);
+        List<Restaurant> results;
+
+        if (q != null && !q.isBlank()
+                && cuisinesParam == null
+                && priceParam == null
+                && latStr == null
+                && lngStr == null
+                && radiusStr == null
+                && friendsOnly == null) {
+            results = restaurantDAO.searchByName(q, params.getLimit());
+        } else {
+            results = restaurantDAO.search(params, userId);
+        }
+
         out.print(gson.toJson(results));
     }
 }

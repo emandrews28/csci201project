@@ -57,8 +57,8 @@ public class RestaurantDAO {
 
     public List<Restaurant> findWithinBounds(double north, double south, double east, double west) {
         String sql = """
-                SELECT restaurant_id, name, address, latitude, longitude, price_tier, cuisine,
-                       is_open_now, avg_rating, review_count, created_at, updated_at
+                SELECT restaurant_id, name, address, latitude, longitude, price_tier, cuisine_type AS cuisine,
+                       is_open_now, avg_rating, review_count, created_at, updated_at, google_place_id
                 FROM restaurants
                 WHERE latitude IS NOT NULL
                   AND longitude IS NOT NULL
@@ -87,8 +87,8 @@ public class RestaurantDAO {
         if (restaurantIds == null || restaurantIds.isEmpty()) return List.of();
 
         StringBuilder sql = new StringBuilder("""
-                SELECT restaurant_id, name, address, latitude, longitude, price_tier, cuisine,
-                       is_open_now, avg_rating, review_count, created_at, updated_at
+                SELECT restaurant_id, name, address, latitude, longitude, price_tier, cuisine_type AS cuisine,
+                       is_open_now, avg_rating, review_count, created_at, updated_at, google_place_id
                 FROM restaurants
                 WHERE restaurant_id IN (
                 """);
@@ -146,7 +146,7 @@ public class RestaurantDAO {
         StringBuilder sql = new StringBuilder();
 
         sql.append("SELECT DISTINCT r.restaurant_id, r.name, r.address, r.latitude, r.longitude, ")
-        .append("r.price_tier, r.cuisine, r.is_open_now, r.avg_rating, r.review_count, ")
+        .append("r.price_tier, r.cuisine_type AS cuisine, r.is_open_now, r.avg_rating, r.review_count, ")
         .append("r.created_at, r.updated_at, r.google_place_id");
 
         if (params.hasLocation()) {
@@ -254,7 +254,7 @@ public class RestaurantDAO {
     }
     
     public Restaurant findById(long restaurantId) {
-        String sql = "SELECT restaurant_id, name, address, latitude, longitude, price_tier, cuisine, " +
+        String sql = "SELECT restaurant_id, name, address, latitude, longitude, price_tier, cuisine_type AS cuisine, " +
                     "is_open_now, avg_rating, review_count, created_at, updated_at, google_place_id " +
                     "FROM restaurants WHERE restaurant_id = ?";
         try (Connection conn = DBConnectionManager.getConnection();
@@ -270,5 +270,43 @@ public class RestaurantDAO {
             e.printStackTrace();
         }
         return null;
+    }
+    public List<Restaurant> searchByName(String query, int limit) {
+        String sql = """
+                SELECT restaurant_id, name, address, cuisine_type AS cuisine, price_tier
+                FROM restaurants
+                WHERE name ILIKE ?
+                ORDER BY name
+                LIMIT ?
+                """;
+
+        List<Restaurant> restaurants = new ArrayList<>();
+
+        try (Connection conn = DBConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, "%" + query.trim() + "%");
+            stmt.setInt(2, limit);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Restaurant restaurant = new Restaurant();
+
+                    restaurant.setRestaurantId(rs.getLong("restaurant_id"));
+                    restaurant.setName(rs.getString("name"));
+                    restaurant.setAddress(rs.getString("address"));
+                    restaurant.setCuisine(rs.getString("cuisine"));
+
+                    int priceTier = rs.getInt("price_tier");
+                    restaurant.setPriceTier(rs.wasNull() ? null : priceTier);
+
+                    restaurants.add(restaurant);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return restaurants;
     }
 }

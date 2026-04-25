@@ -10,6 +10,11 @@ public class RankingEntry {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
+    private String restaurantName;
+    private String restaurantAddress;
+    private String cuisine;
+    private Integer priceTier;
+    
     public RankingEntry() {
     }
 
@@ -65,5 +70,38 @@ public class RankingEntry {
 
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    
+    public String getRestaurantName() {
+        return restaurantName;
+    }
+
+    public void setRestaurantName(String restaurantName) {
+        this.restaurantName = restaurantName;
+    }
+
+    public String getRestaurantAddress() {
+        return restaurantAddress;
+    }
+
+    public void setRestaurantAddress(String restaurantAddress) {
+        this.restaurantAddress = restaurantAddress;
+    }
+
+    public String getCuisine() {
+        return cuisine;
+    }
+
+    public void setCuisine(String cuisine) {
+        this.cuisine = cuisine;
+    }
+
+    public Integer getPriceTier() {
+        return priceTier;
+    }
+
+    public void setPriceTier(Integer priceTier) {
+        this.priceTier = priceTier;
     }
 }
