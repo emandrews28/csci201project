@@ -129,9 +129,10 @@ button {
 	font-size: 0.92rem;
 	cursor: pointer;
 }
+
 button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 .primary {
@@ -140,7 +141,7 @@ button:disabled {
 }
 
 .primary:not(:disabled):hover {
-    background: #6d28d9;
+	background: #6d28d9;
 }
 
 .secondary {
@@ -149,7 +150,7 @@ button:disabled {
 }
 
 .secondary:not(:disabled):hover {
-    background: #d1d5db;
+	background: #d1d5db;
 }
 
 .danger {
@@ -158,7 +159,7 @@ button:disabled {
 }
 
 .danger:not(:disabled):hover {
-    background: #b91c1c;
+	background: #b91c1c;
 }
 
 .ranking-list {
@@ -225,22 +226,22 @@ button:disabled {
 }
 
 .hidden {
-    display: none;
+	display: none;
 }
 
 .dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    margin-top: 6px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    background: white;
-    max-height: 220px;
-    overflow-y: auto;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-    z-index: 20;
+	position: absolute;
+	top: 100%;
+	left: 0;
+	right: 0;
+	margin-top: 6px;
+	border: 1px solid #d1d5db;
+	border-radius: 8px;
+	background: white;
+	max-height: 220px;
+	overflow-y: auto;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+	z-index: 20;
 }
 
 .dropdown-item {
@@ -268,7 +269,7 @@ button:disabled {
 }
 
 .restaurant-search-wrap {
-    position: relative;
+	position: relative;
 }
 
 @media ( max-width : 720px) {
@@ -525,15 +526,11 @@ button:disabled {
         const actions = document.createElement('div');
         actions.className = 'actions';
 
-        const newPosInput = document.createElement('input');
-        newPosInput.type = 'number';
-        newPosInput.min = '1';
-        newPosInput.value = entry.rankPosition;
-
-        const moveBtn = document.createElement('button');
-        moveBtn.className = 'secondary';
-        moveBtn.textContent = 'Update Position';
-        moveBtn.addEventListener('click', () => updateRanking(entry.restaurantId, newPosInput.value));
+        const topBtn = document.createElement('button');
+        topBtn.className = 'secondary';
+        topBtn.textContent = 'Move to Top';
+        topBtn.disabled = entry.rankPosition <= 1;
+        topBtn.addEventListener('click', () => moveToTop(entry));
 
         const upBtn = document.createElement('button');
         upBtn.className = 'secondary';
@@ -547,15 +544,21 @@ button:disabled {
         downBtn.disabled = entry.rankPosition >= rankings.length;
         downBtn.addEventListener('click', () => updateRanking(entry.restaurantId, entry.rankPosition + 1));
 
+        const bottomBtn = document.createElement('button');
+        bottomBtn.className = 'secondary';
+        bottomBtn.textContent = 'Move to Bottom';
+        bottomBtn.disabled = entry.rankPosition >= rankings.length;
+        bottomBtn.addEventListener('click', () => moveToBottom(entry, rankings));
+
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'danger';
         deleteBtn.textContent = 'Remove';
         deleteBtn.addEventListener('click', () => deleteRanking(entry.restaurantId));
 
-        actions.appendChild(newPosInput);
-        actions.appendChild(moveBtn);
+        actions.appendChild(topBtn);
         actions.appendChild(upBtn);
         actions.appendChild(downBtn);
+        actions.appendChild(bottomBtn);
         actions.appendChild(deleteBtn);
 
         card.appendChild(actions);
@@ -609,7 +612,22 @@ button:disabled {
       }
     }
 
-    async function updateRanking(restaurantId, rankPosition) {
+    async function moveToTop(entry) {
+    	  for (let pos = entry.rankPosition - 1; pos >= 1; pos--) {
+    	    const ok = await updateRanking(entry.restaurantId, pos, false);
+    	    if (!ok) return;
+    	  }
+    	  loadRankings();
+    	}
+
+    async function moveToBottom(entry, rankings) {
+    	  for (let pos = entry.rankPosition + 1; pos <= rankings.length; pos++) {
+    	    const ok = await updateRanking(entry.restaurantId, pos, false);
+    	    if (!ok) return;
+    	  }
+    	  loadRankings();
+    	}
+    async function updateRanking(restaurantId, rankPosition, reload = true) {
       const pos = Number(rankPosition);
       if (!pos || pos < 1) {
         showStatus('Rank position must be greater than 0.', true);
@@ -635,14 +653,16 @@ button:disabled {
 
         if (!res.ok) {
           showStatus(data.error || 'Failed to update ranking.', true);
-          return;
+          return false;
         }
 
         showStatus('Ranking updated successfully.');
         loadRankings();
+        return true;
       } catch (err) {
         console.error(err);
         showStatus('Network error while updating ranking.', true);
+        return false;
       }
     }
 

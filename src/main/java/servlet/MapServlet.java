@@ -55,7 +55,7 @@ public class MapServlet extends HttpServlet {
         filters.setMinRank(parseOptionalDouble(request, "min_rank", null));
         filters.setOpenNow(parseOptionalBoolean(request, "open_now"));
         filters.setBounds(parseBounds(request));
-        filters.setCuisines(parseStringValues(request, "cuisines"));
+        filters.setCuisineIds(parseIntegerValues(request, "cuisines"));
         filters.setPriceTiers(parseIntegerValues(request, "priceTiers", "price"));
         return filters;
     }

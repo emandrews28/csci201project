@@ -7,7 +7,7 @@ public class MapFilterParams {
     private Double userLat;
     private Double userLng;
     private Double radiusMiles;
-    private List<String> cuisines = new ArrayList<>();
+    private List<Integer> cuisineIds = new ArrayList<>();
     private List<Integer> priceTiers = new ArrayList<>();
     private Double minRank;
     private Boolean openNow;
@@ -19,8 +19,8 @@ public class MapFilterParams {
     public void setUserLng(Double userLng) { this.userLng = userLng; }
     public Double getRadiusMiles() { return radiusMiles; }
     public void setRadiusMiles(Double radiusMiles) { this.radiusMiles = radiusMiles; }
-    public List<String> getCuisines() { return cuisines; }
-    public void setCuisines(List<String> cuisines) { this.cuisines = cuisines == null ? new ArrayList<>() : cuisines; }
+    public List<Integer> getCuisineIds() { return cuisineIds; }
+    public void setCuisineIds(List<Integer> cuisineIds) { this.cuisineIds = cuisineIds == null ? new ArrayList<>() : cuisineIds; }
     public List<Integer> getPriceTiers() { return priceTiers; }
     public void setPriceTiers(List<Integer> priceTiers) { this.priceTiers = priceTiers == null ? new ArrayList<>() : priceTiers; }
     public Double getMinRank() { return minRank; }

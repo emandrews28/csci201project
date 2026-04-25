@@ -64,7 +64,7 @@ public class WishlistMoveServlet extends HttpServlet {
         boolean moved = wishlistDAO.moveToVisited(userId, restaurantId);
 
         if (moved) {
-            out.print("{\"message\":\"Moved to visited list\"}");
+        	out.print("{\"message\":\"Moved to rankings\"}");
         } else {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             out.print("{\"error\":\"Wishlist entry not found\"}");

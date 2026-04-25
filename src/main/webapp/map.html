@@ -1,201 +1,501 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Map</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-  <style>
-    :root { color-scheme: light; }
-    body {
-      margin: 0;
-      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: #f5f5f5;
-      color: #1f2937;
-    }
-    header {
-      background: #0f766e;
-      color: white;
-      padding: 16px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 1.2rem;
-      line-height: 1.2;
-    }
-    header nav {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-    header a {
-      color: white;
-      text-decoration: none;
-      font-size: 0.95rem;
-      font-weight: 600;
-      opacity: 0.95;
-    }
-    header a:hover {
-      opacity: 1;
-      text-decoration: underline;
-    }
-    main { display: grid; grid-template-columns: 340px 1fr; gap: 16px; padding: 16px; min-height: calc(100vh - 64px); box-sizing: border-box; }
-    .panel, .map-shell { background: white; border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.08); overflow: hidden; }
-    .panel { padding: 16px; display: grid; gap: 14px; align-content: start; }
-    .panel h2, .panel h3 { margin: 0; }
-    label { display: block; margin: 0 0 6px; font-size: 0.9rem; font-weight: 700; }
-    input[type="number"], input[type="text"], select { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 0.95rem; }input[type="range"] { width: 100%; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .button-row { display: flex; flex-wrap: wrap; gap: 10px; }
-    button { border: none; border-radius: 8px; padding: 10px 14px; font-size: 0.92rem; cursor: pointer; }
-    .primary { background: #0f766e; color: white; }
-    .primary:hover { background: #0d5f58; }
-    .secondary { background: #e5e7eb; color: #111827; }
-    .secondary:hover { background: #d1d5db; }
-    .status { font-size: 0.92rem; min-height: 1.2em; color: #4b5563; }
-    .status.error { color: #b91c1c; }
-    .status.ok { color: #047857; }
-    .map-shell { position: relative; display: flex; flex-direction: column; min-height: 680px; }
-    #map { flex: 1; min-height: 540px; }
-    .sidebar-mini { padding: 12px 16px; border-top: 1px solid #e5e7eb; background: #fafafa; }
-    .results { display: grid; gap: 10px; margin-top: 12px; max-height: 320px; overflow: auto; }
-    .result { padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 12px; background: white; cursor: pointer; }
-    .result:hover { border-color: #0f766e; }
-    .result.active { border-color: #0f766e; box-shadow: 0 0 0 1px #0f766e inset; }
-    .result-actions { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
-    .result-actions button { padding: 6px 10px; font-size: 0.82rem; border-radius: 8px; }
-    .wishlist-btn { background: #f59e0b; color: white; }
-    .wishlist-btn:hover { background: #d97706; }
-    .wishlist-btn.added { background: #9ca3af; cursor: not-allowed; }
-    .muted { color: #6b7280; font-size: 0.9rem; }
-    .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; background: #e0f2fe; color: #075985; font-size: 0.78rem; margin-left: 6px; }
-    .open { background: #dcfce7; color: #166534; }
-    .view-toggle { display: flex; gap: 8px; }
-    .view-toggle button.active { background: #0f766e; color: white; }
-    .field-help { font-size: 0.82rem; color: #6b7280; margin-top: 4px; }
-    .popup { min-width: 180px; }
-    .popup strong { display: block; margin-bottom: 4px; }
-    .popup .small { font-size: 0.85rem; color: #4b5563; }
-    .hidden { display: none; }
-    @media (max-width: 720px) {
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      header nav {
-        justify-content: flex-start;
-      }
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Map</title>
+<link rel="stylesheet"
+	href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet"
+	href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet"
+	href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<style>
+:root {
+	color-scheme: light;
+}
 
-    @media (max-width: 960px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-      .map-shell {
-        min-height: 560px;
-      }
-    }
-  </style>
+body {
+	margin: 0;
+	font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	background: #f5f5f5;
+	color: #1f2937;
+}
+
+header {
+	background: #0f766e;
+	color: white;
+	padding: 16px 24px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 16px;
+}
+
+header h1 {
+	margin: 0;
+	font-size: 1.2rem;
+	line-height: 1.2;
+}
+
+header nav {
+	display: flex;
+	gap: 14px;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+}
+
+header a {
+	color: white;
+	text-decoration: none;
+	font-size: 0.95rem;
+	font-weight: 600;
+	opacity: 0.95;
+}
+
+header a:hover {
+	opacity: 1;
+	text-decoration: underline;
+}
+
+main {
+	display: grid;
+	grid-template-columns: 340px 1fr;
+	gap: 16px;
+	padding: 16px;
+	min-height: calc(100vh - 64px);
+	box-sizing: border-box;
+}
+
+.panel, .map-shell, .list-shell {
+	background: white;
+	border-radius: 14px;
+	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+	overflow: hidden;
+}
+
+.panel {
+	padding: 16px;
+	display: grid;
+	gap: 14px;
+	align-content: start;
+}
+
+.panel h2, .panel h3 {
+	margin: 0;
+}
+
+label {
+	display: block;
+	margin: 0 0 6px;
+	font-size: 0.9rem;
+	font-weight: 700;
+}
+
+input[type="number"], input[type="text"], select {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 10px 12px;
+	border-radius: 8px;
+	border: 1px solid #d1d5db;
+	font-size: 0.95rem;
+}
+
+input[type="range"] {
+	width: 100%;
+}
+
+.row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+
+.button-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+button {
+	border: none;
+	border-radius: 8px;
+	padding: 10px 14px;
+	font-size: 0.92rem;
+	cursor: pointer;
+}
+
+.primary {
+	background: #0f766e;
+	color: white;
+}
+
+.primary:hover {
+	background: #0d5f58;
+}
+
+.secondary {
+	background: #e5e7eb;
+	color: #111827;
+}
+
+.secondary:hover {
+	background: #d1d5db;
+}
+
+.status {
+	font-size: 0.92rem;
+	min-height: 1.2em;
+	color: #4b5563;
+}
+
+.status.error {
+	color: #b91c1c;
+}
+
+.status.ok {
+	color: #047857;
+}
+
+.map-shell {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	min-height: 680px;
+}
+
+.list-shell {
+	padding: 16px;
+	align-content: start;
+}
+
+.list-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 12px;
+	margin-bottom: 12px;
+	flex-wrap: wrap;
+}
+
+.list-header h2 {
+	margin: 0;
+}
+
+#map {
+	flex: 1;
+	min-height: 540px;
+}
+
+.sidebar-mini {
+	padding: 12px 16px;
+	border-top: 1px solid #e5e7eb;
+	background: #fafafa;
+}
+
+.results {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 12px;
+	margin-top: 0;
+}
+
+.result {
+	padding: 14px;
+	border: 1px solid #e5e7eb;
+	border-radius: 12px;
+	background: white;
+	cursor: pointer;
+}
+
+.result:hover {
+	border-color: #0f766e;
+}
+
+.result.active {
+	border-color: #0f766e;
+	box-shadow: 0 0 0 1px #0f766e inset;
+}
+
+.result-actions {
+	margin-top: 8px;
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.result-actions button {
+	padding: 6px 10px;
+	font-size: 0.82rem;
+	border-radius: 8px;
+}
+
+.wishlist-btn {
+	background: #f59e0b;
+	color: white;
+}
+
+.wishlist-btn:hover {
+	background: #d97706;
+}
+
+.wishlist-btn.added {
+	background: #9ca3af;
+	cursor: not-allowed;
+}
+
+.muted {
+	color: #6b7280;
+	font-size: 0.9rem;
+}
+
+.badge {
+	display: inline-block;
+	padding: 3px 8px;
+	border-radius: 999px;
+	background: #e0f2fe;
+	color: #075985;
+	font-size: 0.78rem;
+	margin-left: 6px;
+}
+
+.open {
+	background: #dcfce7;
+	color: #166534;
+}
+
+.view-toggle {
+	display: flex;
+	gap: 8px;
+}
+
+.view-toggle button.active {
+	background: #0f766e;
+	color: white;
+}
+
+.field-help {
+	font-size: 0.82rem;
+	color: #6b7280;
+	margin-top: 4px;
+}
+
+.cuisine-filter-wrap {
+	position: relative;
+}
+
+.dropdown {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	right: 0;
+	margin-top: 6px;
+	border: 1px solid #d1d5db;
+	border-radius: 8px;
+	background: white;
+	max-height: 220px;
+	overflow-y: auto;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+	z-index: 20;
+}
+
+.dropdown-item {
+	padding: 10px 12px;
+	cursor: pointer;
+	border-bottom: 1px solid #f3f4f6;
+}
+
+.dropdown-item:last-child {
+	border-bottom: none;
+}
+
+.dropdown-item:hover {
+	background: #f3f4f6;
+}
+
+.selected-cuisines {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 8px;
+}
+
+.cuisine-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 8px;
+	border-radius: 999px;
+	background: #e0f2fe;
+	color: #075985;
+	font-size: 0.82rem;
+}
+
+.cuisine-chip button {
+	padding: 0;
+	background: transparent;
+	color: inherit;
+	font-size: 0.9rem;
+	line-height: 1;
+}
+
+.popup {
+	min-width: 180px;
+}
+
+.popup strong {
+	display: block;
+	margin-bottom: 4px;
+}
+
+.popup .small {
+	font-size: 0.85rem;
+	color: #4b5563;
+}
+
+.popup .wishlist-btn {
+	margin-top: 8px;
+	padding: 6px 10px;
+	font-size: 0.82rem;
+	border-radius: 8px;
+}
+
+.hidden {
+	display: none;
+}
+
+@media ( max-width : 720px) {
+	header {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+	header nav {
+		justify-content: flex-start;
+	}
+}
+
+@media ( max-width : 960px) {
+	main {
+		grid-template-columns: 1fr;
+	}
+	.map-shell {
+		min-height: 560px;
+	}
+}
+</style>
 </head>
 <body>
-  <header>
-    <h1>Nearby Restaurants Map</h1>
-    <nav>
-      <a href="index.html">Home</a>
-      <a href="rankings.html">Rankings</a>
-      <a href="wishlist.html">Wishlist</a>
-      <a href="photos.html">Photos</a>
-    </nav>
-  </header>
-  <main>
-    <section class="panel">
-      <div>
-        <h2>Search</h2>
-        <p class="muted">Guest users see global ranking scores. Logged-in users automatically get ranking boosts from their own list.</p>
-      </div>
+	<header>
+		<h1>Nearby Restaurants Map</h1>
+		<nav>
+			<a href="index.html">Home</a> <a href="rankings.html">Rankings</a> <a
+				href="wishlist.html">Wishlist</a> <a href="photos.html">Photos</a>
+		</nav>
+	</header>
+	<main>
+		<section class="panel">
+			<div>
+				<h2>Search</h2>
+				<p class="muted">Guest users see global ranking scores.
+					Logged-in users automatically get ranking boosts from their own
+					list.</p>
+			</div>
 
-      <div class="row">
-        <div>
-          <label for="lat">Latitude</label>
-          <input id="lat" type="number" step="0.000001" />
-        </div>
-        <div>
-          <label for="lng">Longitude</label>
-          <input id="lng" type="number" step="0.000001" />
-        </div>
-      </div>
-      <div class="button-row">
-        <button id="geoBtn" class="secondary" type="button">Use my location</button>
-        <button id="searchBtn" class="primary" type="button">Refresh map</button>
-      </div>
-      <div id="geoStatus" class="status"></div>
+			<div class="row">
+				<div>
+					<label for="lat">Latitude</label> <input id="lat" type="number"
+						step="0.000001" />
+				</div>
+				<div>
+					<label for="lng">Longitude</label> <input id="lng" type="number"
+						step="0.000001" />
+				</div>
+			</div>
+			<div class="button-row">
+				<button id="geoBtn" class="secondary" type="button">Use my
+					location</button>
+				<button id="searchBtn" class="primary" type="button">Refresh
+					map</button>
+			</div>
+			<div id="geoStatus" class="status"></div>
 
-      <div>
-        <label for="radius">Radius: <span id="radiusValue">10</span> miles</label>
-        <input id="radius" type="range" min="1" max="25" value="10" />
-      </div>
+            <div>
+                <label for="radius">Radius: <span id="radiusValue">2</span>
+                    miles
+                </label> <input id="radius" type="range" min="0" max="6" step="1" value="3" />
+            </div>
 
-      <div>
-        <label for="cuisines">Cuisine filters</label>
-        <input id="cuisines" type="text" placeholder="comma-separated, e.g. sushi, italian" />
-        <div class="field-help">Leave blank to show all cuisines.</div>
-      </div>
+			<div>
+				<label for="cuisineSearch">Cuisine filters</label>
+				<div class="cuisine-filter-wrap">
+					<input id="cuisineSearch" type="text"
+						placeholder="Search cuisine name..." autocomplete="off" />
+					<div id="cuisineDropdown" class="dropdown hidden"></div>
+				</div>
+				<div id="selectedCuisines" class="selected-cuisines"></div>
+				<div class="field-help">Select one or more cuisines. Leave
+					blank to show all cuisines.</div>
+			</div>
 
-      <div class="row">
-        <div>
-          <label for="minRank">Minimum rank score</label>
-          <input id="minRank" type="number" step="0.1" min="0" placeholder="0" />
-        </div>
-        <div>
-          <label for="openNow">Open now</label>
-          <select id="openNow">
-            <option value="">Any</option>
-            <option value="true">Only open</option>
-          </select>
-        </div>
-      </div>
+			<div class="row">
+				<div>
+					<label for="minRank">Minimum rank score</label> <input id="minRank"
+						type="number" step="0.1" min="0" placeholder="0" />
+				</div>
+				<div>
+					<label for="openNow">Open now</label> <select id="openNow">
+						<option value="">Any</option>
+						<option value="true">Only open</option>
+					</select>
+				</div>
+			</div>
 
-      <div>
-        <label>Price tiers</label>
-        <div class="button-row">
-          <label><input type="checkbox" class="price" value="1" /> $</label>
-          <label><input type="checkbox" class="price" value="2" /> $$</label>
-          <label><input type="checkbox" class="price" value="3" /> $$$</label>
-          <label><input type="checkbox" class="price" value="4" /> $$$$</label>
-        </div>
-      </div>
+			<div>
+				<label>Price tiers</label>
+				<div class="button-row">
+					<label><input type="checkbox" class="price" value="1"
+						checked /> $</label> <label><input type="checkbox" class="price"
+						value="2" checked /> $$</label> <label><input type="checkbox"
+						class="price" value="3" checked /> $$$</label> <label><input
+						type="checkbox" class="price" value="4" checked /> $$$$</label>
+				</div>
+			</div>
 
-      <div>
-        <label>View</label>
-        <div class="view-toggle">
-          <button id="mapViewBtn" class="active secondary" type="button">Map</button>
-          <button id="listViewBtn" class="secondary" type="button">List</button>
-        </div>
-      </div>
+			<div>
+				<label>View</label>
+				<div class="view-toggle">
+					<button id="mapViewBtn" class="active secondary" type="button">Map</button>
+					<button id="listViewBtn" class="secondary" type="button">List</button>
+				</div>
+			</div>
 
-      <div class="status" id="countStatus"></div>
-      <div id="results" class="results hidden"></div>
-    </section>
+			<div class="status" id="countStatus"></div>
+		</section>
 
-    <section class="map-shell">
-      <div id="map"></div>
-      <div class="sidebar-mini">
-        <div id="selectedTitle"><strong>Select a restaurant marker</strong></div>
-        <div id="selectedMeta" class="muted">Marker details appear here.</div>
-      </div>
-    </section>
-  </main>
+		<section class="map-shell">
+			<div id="map"></div>
+			<div class="sidebar-mini">
+				<div id="selectedTitle">
+					<strong>Select a restaurant marker</strong>
+				</div>
+				<div id="selectedMeta" class="muted">Marker details appear
+					here.</div>
+			</div>
+		</section>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script>
+		<section class="list-shell hidden">
+			<div class="list-header">
+				<h2>Restaurants</h2>
+				<div class="muted">Click a restaurant to view details.</div>
+			</div>
+			<div id="results" class="results"></div>
+		</section>
+	</main>
+
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+	<script
+		src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+	<script>
     const DEFAULT_CENTER = [34.0224, -118.2851];
     const map = L.map('map', { zoomControl: true }).setView(DEFAULT_CENTER, 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -206,6 +506,8 @@
     const clusterGroup = L.markerClusterGroup();
     const markersById = new Map();
     const resultsEl = document.getElementById('results');
+    const mapShell = document.querySelector('.map-shell');
+    const listShell = document.querySelector('.list-shell');
     const countStatus = document.getElementById('countStatus');
     const geoStatus = document.getElementById('geoStatus');
     const selectedTitle = document.getElementById('selectedTitle');
@@ -214,25 +516,42 @@
     const lngEl = document.getElementById('lng');
     const radiusEl = document.getElementById('radius');
     const radiusValue = document.getElementById('radiusValue');
-    const cuisinesEl = document.getElementById('cuisines');
+    const radiusOptions = [0.25, 0.5, 1, 2, 5, 10, 25];
+    const cuisineSearchEl = document.getElementById('cuisineSearch');
+    const cuisineDropdownEl = document.getElementById('cuisineDropdown');
+    const selectedCuisinesEl = document.getElementById('selectedCuisines');
     const minRankEl = document.getElementById('minRank');
     const openNowEl = document.getElementById('openNow');
     const mapViewBtn = document.getElementById('mapViewBtn');
     const listViewBtn = document.getElementById('listViewBtn');
     const searchBtn = document.getElementById('searchBtn');
     const geoBtn = document.getElementById('geoBtn');
+
     let activeRestaurantId = null;
     let currentView = 'map';
     let currentRestaurants = [];
+    let cuisineOptions = [];
+    let selectedCuisineIds = new Set();
+    let wishlistRestaurantIds = new Set();
+    let rankedRestaurantIds = new Set();
 
     latEl.value = DEFAULT_CENTER[0];
     lngEl.value = DEFAULT_CENTER[1];
 
     radiusEl.addEventListener('input', () => {
-      radiusValue.textContent = radiusEl.value;
-      scheduleRefresh();
+        radiusValue.textContent = radiusOptions[Number(radiusEl.value)];
+        scheduleRefresh();
+      });
+    [minRankEl, openNowEl].forEach(el => el.addEventListener('change', scheduleRefresh));
+    document.querySelectorAll('.price').forEach(el => {
+        el.addEventListener('change', scheduleRefresh);
+      });
+    cuisineSearchEl.addEventListener('input', renderCuisineDropdown);
+    document.addEventListener('click', (event) => {
+      if (!cuisineDropdownEl.contains(event.target) && event.target !== cuisineSearchEl) {
+        cuisineDropdownEl.classList.add('hidden');
+      }
     });
-    [cuisinesEl, minRankEl, openNowEl].forEach(el => el.addEventListener('change', scheduleRefresh));
     [latEl, lngEl].forEach(el => el.addEventListener('change', scheduleRefresh));
     searchBtn.addEventListener('click', refreshRestaurants);
     geoBtn.addEventListener('click', requestLocation);
@@ -241,18 +560,19 @@
     map.on('moveend zoomend', scheduleRefresh);
 
     function setView(view) {
-      currentView = view;
-      mapViewBtn.classList.toggle('active', view === 'map');
-      listViewBtn.classList.toggle('active', view === 'list');
-      if (view === 'map') {
-        map.getContainer().style.display = 'block';
-        resultsEl.classList.add('hidden');
-        setTimeout(() => map.invalidateSize(), 0);
-      } else {
-        map.getContainer().style.display = 'none';
-        resultsEl.classList.remove('hidden');
+        currentView = view;
+        mapViewBtn.classList.toggle('active', view === 'map');
+        listViewBtn.classList.toggle('active', view === 'list');
+
+        if (view === 'map') {
+          mapShell.classList.remove('hidden');
+          listShell.classList.add('hidden');
+          setTimeout(() => map.invalidateSize(), 0);
+        } else {
+          mapShell.classList.add('hidden');
+          listShell.classList.remove('hidden');
+        }
       }
-    }
 
     function requestLocation() {
       if (!navigator.geolocation) {
@@ -282,6 +602,127 @@
       geoStatus.textContent = message;
       geoStatus.className = isError ? 'status error' : 'status ok';
     }
+    
+    async function loadCuisines() {
+        try {
+          const res = await fetch('api/cuisines', { credentials: 'same-origin' });
+          if (!res.ok) {
+            setStatus('Failed to load cuisine filters.', true);
+            return;
+          }
+          cuisineOptions = await res.json();
+        } catch (err) {
+          console.error(err);
+          setStatus('Network error loading cuisine filters.', true);
+        }
+      }
+    
+    async function loadWishlistIds() {
+        try {
+          const res = await fetch('api/wishlist', { credentials: 'same-origin' });
+
+          if (res.status === 401) {
+            wishlistRestaurantIds = new Set();
+            return;
+          }
+
+          if (!res.ok) {
+            return;
+          }
+
+          const entries = await res.json();
+          wishlistRestaurantIds = new Set(entries.map(entry => entry.restaurantId));
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+    async function loadRankingIds() {
+        try {
+          const res = await fetch('api/rankings', { credentials: 'same-origin' });
+
+          if (res.status === 401) {
+            rankedRestaurantIds = new Set();
+            return;
+          }
+
+          if (!res.ok) {
+            return;
+          }
+
+          const entries = await res.json();
+          rankedRestaurantIds = new Set(entries.map(entry => entry.restaurantId));
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      function renderCuisineDropdown() {
+        const query = cuisineSearchEl.value.trim().toLowerCase();
+
+        if (!query) {
+          cuisineDropdownEl.innerHTML = '';
+          cuisineDropdownEl.classList.add('hidden');
+          return;
+        }
+
+        const matches = cuisineOptions.filter(cuisine =>
+          cuisine.name.toLowerCase().includes(query) &&
+          !selectedCuisineIds.has(cuisine.cuisineId)
+        );
+
+        cuisineDropdownEl.innerHTML = '';
+
+        if (matches.length === 0) {
+          cuisineDropdownEl.innerHTML = '<div class="dropdown-item">No cuisines found.</div>';
+          cuisineDropdownEl.classList.remove('hidden');
+          return;
+        }
+
+        matches.forEach((cuisine) => {
+          const item = document.createElement('div');
+          item.className = 'dropdown-item';
+          item.textContent = cuisine.name;
+
+          item.addEventListener('click', () => {
+            selectedCuisineIds.add(cuisine.cuisineId);
+            cuisineSearchEl.value = '';
+            cuisineDropdownEl.innerHTML = '';
+            cuisineDropdownEl.classList.add('hidden');
+            renderSelectedCuisines();
+            scheduleRefresh();
+          });
+
+          cuisineDropdownEl.appendChild(item);
+        });
+
+        cuisineDropdownEl.classList.remove('hidden');
+      }
+
+      function renderSelectedCuisines() {
+        selectedCuisinesEl.innerHTML = '';
+
+        selectedCuisineIds.forEach((id) => {
+          const cuisine = cuisineOptions.find(item => item.cuisineId === id);
+          if (!cuisine) return;
+
+          const chip = document.createElement('span');
+          chip.className = 'cuisine-chip';
+
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.textContent = '×';
+          removeBtn.addEventListener('click', () => {
+            selectedCuisineIds.delete(id);
+            renderSelectedCuisines();
+            scheduleRefresh();
+          });
+
+          chip.append(document.createTextNode(cuisine.name));
+          chip.appendChild(removeBtn);
+          selectedCuisinesEl.appendChild(chip);
+        });
+      }
 
     function selectedPriceTiers() {
       return [...document.querySelectorAll('.price:checked')].map(el => el.value);
@@ -308,13 +749,20 @@
       const params = new URLSearchParams();
       params.set('lat', lat);
       params.set('lng', lng);
-      params.set('radius_miles', radiusEl.value);
+      params.set('radius_miles', radiusOptions[Number(radiusEl.value)]);
       const minRank = minRankEl.value.trim();
       if (minRank) params.set('min_rank', minRank);
       const openNow = openNowEl.value;
       if (openNow) params.set('open_now', openNow);
-      cuisinesEl.value.split(',').map(v => v.trim()).filter(Boolean).forEach(v => params.append('cuisines', v));
-      selectedPriceTiers().forEach(v => params.append('priceTiers', v));
+      selectedCuisineIds.forEach(id => params.append('cuisines', id));
+
+      const priceTiers = selectedPriceTiers();
+      if (priceTiers.length === 0) {
+        renderRestaurants([]);
+        setStatus('No price tiers selected.', false);
+        return;
+      }
+      priceTiers.forEach(v => params.append('priceTiers', v));
       const bounds = getBoundsParams();
       Object.entries(bounds).forEach(([k, v]) => params.set(k, v));
 
@@ -359,22 +807,36 @@
         const wishBtn = document.createElement('button');
         wishBtn.type = 'button';
         wishBtn.className = 'wishlist-btn';
-        wishBtn.textContent = '+ Wishlist';
-        wishBtn.addEventListener('click', (ev) => {
-          ev.stopPropagation();
-          addToWishlist(restaurant, wishBtn);
-        });
+
+        if (rankedRestaurantIds.has(restaurant.restaurantId)) {
+            wishBtn.textContent = 'Visited & Ranked';
+            wishBtn.classList.add('added');
+            wishBtn.disabled = true;
+          } else if (wishlistRestaurantIds.has(restaurant.restaurantId)) {
+            wishBtn.textContent = 'On wishlist';
+            wishBtn.classList.add('added');
+            wishBtn.disabled = true;
+          } else {
+            wishBtn.textContent = '+ Wishlist';
+          }
+
+          wishBtn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            addToWishlist(restaurant, wishBtn);
+          });
         actions.appendChild(wishBtn);
         card.appendChild(actions);
 
         card.addEventListener('click', () => {
-          selectRestaurant(restaurant);
-          const marker = markersById.get(restaurant.restaurantId);
-          if (marker) {
-            map.panTo(marker.getLatLng());
-            marker.openPopup();
-          }
-        });
+            selectRestaurant(restaurant);
+            if (currentView === 'map') {
+              const marker = markersById.get(restaurant.restaurantId);
+              if (marker) {
+                map.panTo(marker.getLatLng());
+                marker.openPopup();
+              }
+            }
+          });
         resultsEl.appendChild(card);
       });
 
@@ -399,7 +861,9 @@
         `Distance: ${formatDistance(restaurant.distanceMiles)}`,
         restaurant.cuisine ? `Cuisine: ${escapeHtml(restaurant.cuisine)}` : null,
         restaurant.priceTier ? `Price tier: ${'$'.repeat(restaurant.priceTier)}` : null,
-        restaurant.openNow === false ? 'Currently closed' : 'Open now data available'
+        restaurant.openNow === true ? 'Open now' :
+        restaurant.openNow === false ? 'Currently closed' :
+        			                   'Hours unavailable'
       ].filter(Boolean).join('<br/>');
 
       document.querySelectorAll('.result').forEach(card => card.classList.remove('active'));
@@ -410,17 +874,20 @@
     }
 
     function buildPopupHtml(restaurant) {
-      const price = restaurant.priceTier ? '$'.repeat(restaurant.priceTier) : 'n/a';
-      return `
-        <div class="popup">
-          <strong>${escapeHtml(restaurant.name)}</strong>
-          <div class="small">Rank score: ${formatScore(restaurant.rankScore)}</div>
-          <div class="small">Distance: ${formatDistance(restaurant.distanceMiles)}</div>
-          <div class="small">Cuisine: ${escapeHtml(restaurant.cuisine || 'n/a')}</div>
-          <div class="small">Price: ${price}</div>
-          <div class="small">${escapeHtml(restaurant.address || 'No address listed')}</div>
-        </div>`;
-    }
+        const price = restaurant.priceTier ? '$'.repeat(restaurant.priceTier) : 'n/a';
+        return `
+          <div class="popup">
+            <strong>${escapeHtml(restaurant.name)}</strong>
+            <div class="small">Rank score: ${formatScore(restaurant.rankScore)}</div>
+            <div class="small">Distance: ${formatDistance(restaurant.distanceMiles)}</div>
+            <div class="small">Cuisine: ${escapeHtml(restaurant.cuisine || 'n/a')}</div>
+            <div class="small">Price: ${price}</div>
+            <div class="small">${escapeHtml(restaurant.address || 'No address listed')}</div>
+            <button class="wishlist-btn ${(rankedRestaurantIds.has(restaurant.restaurantId) || wishlistRestaurantIds.has(restaurant.restaurantId)) ? 'added' : ''}" type="button" onclick="addToWishlistById(${restaurant.restaurantId})">
+            ${rankedRestaurantIds.has(restaurant.restaurantId) ? 'Visited & Ranked' : wishlistRestaurantIds.has(restaurant.restaurantId) ? 'On wishlist' : '+ Wishlist'}
+          </button>
+          </div>`;
+      }
 
     function formatScore(score) { return Number(score || 0).toFixed(2); }
     function formatDistance(distance) { return `${Number(distance || 0).toFixed(2)} mi`; }
@@ -430,9 +897,36 @@
       if (restaurant.priceTier) badges.push(`<span class="badge">${'$'.repeat(restaurant.priceTier)}</span>`);
       return badges.join(' ');
     }
+    
+    function addToWishlistById(restaurantId) {
+        const restaurant = currentRestaurants.find(item => item.restaurantId === restaurantId);
+        if (!restaurant) return;
+        addToWishlist(restaurant, null);
+      }
+    
     async function addToWishlist(restaurant, btn) {
-      const notes = window.prompt(`Notes for "${restaurant.name}" (optional):`, '');
-      if (notes === null) return;
+        if (rankedRestaurantIds.has(restaurant.restaurantId)) {
+          setStatus('This restaurant is already visited and ranked.', false);
+          if (btn) {
+            btn.textContent = 'Visited & Ranked';
+            btn.classList.add('added');
+            btn.disabled = true;
+          }
+          return;
+        }
+
+        if (wishlistRestaurantIds.has(restaurant.restaurantId)) {
+          setStatus('Already on your wishlist.', false);
+          if (btn) {
+            btn.textContent = 'On wishlist';
+            btn.classList.add('added');
+            btn.disabled = true;
+          }
+          return;
+        }
+
+        const notes = window.prompt(`Notes for "${restaurant.name}" (optional):`, '');
+        if (notes === null) return;
       try {
         const res = await fetch('api/wishlist', {
           method: 'POST',
@@ -446,15 +940,17 @@
           return;
         }
         if (res.status === 409) {
-          if (btn) { btn.textContent = 'On wishlist'; btn.classList.add('added'); btn.disabled = true; }
-          setStatus('Already on your wishlist.', false);
-          return;
-        }
+            wishlistRestaurantIds.add(restaurant.restaurantId);
+            if (btn) { btn.textContent = 'On wishlist'; btn.classList.add('added'); btn.disabled = true; }
+            setStatus('Already on your wishlist.', false);
+            return;
+          }
         if (!res.ok) {
           setStatus(payload.error || 'Could not add to wishlist.', true);
           return;
         }
-        if (btn) { btn.textContent = 'Added'; btn.classList.add('added'); btn.disabled = true; }
+        wishlistRestaurantIds.add(restaurant.restaurantId);
+        if (btn) { btn.textContent = 'On wishlist'; btn.classList.add('added'); btn.disabled = true; }
         setStatus(`Added "${restaurant.name}" to wishlist.`, false);
       } catch (err) {
         setStatus('Network error adding to wishlist.', true);
@@ -473,9 +969,10 @@
         }
       });
     }
-
+    
+    loadCuisines();
+    Promise.all([loadWishlistIds(), loadRankingIds()]).then(refreshRestaurants);
     setView('map');
-    refreshRestaurants();
   </script>
 </body>
 </html>

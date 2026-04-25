@@ -53,13 +53,38 @@ public class MapService {
         List<MapResult> results = new ArrayList<>();
 
         StringBuilder sql = new StringBuilder("""
-            SELECT restaurant_id, name, latitude, longitude,
-                   COALESCE(avg_rating, 0) AS avg_rating,
-                   COALESCE(review_count, 0) AS review_count
-            FROM restaurants
-            WHERE latitude IS NOT NULL
-              AND longitude IS NOT NULL
-            """);
+                SELECT DISTINCT r.restaurant_id,
+                       r.name,
+                       r.address,
+                       r.latitude,
+                       r.longitude,
+                       r.cuisine_type AS cuisine,
+                       r.price_tier,
+                       COALESCE(r.avg_rating, 0) AS avg_rating,
+                       COALESCE(r.review_count, 0) AS review_count,
+                       CASE
+                         WHEN h.restaurant_id IS NULL THEN NULL
+                         WHEN h.open_time <= h.close_time THEN
+                           ((CURRENT_TIMESTAMP AT TIME ZONE 'America/Los_Angeles')::time >= h.open_time
+                            AND (CURRENT_TIMESTAMP AT TIME ZONE 'America/Los_Angeles')::time < h.close_time)
+                         ELSE
+                           ((CURRENT_TIMESTAMP AT TIME ZONE 'America/Los_Angeles')::time >= h.open_time
+                            OR (CURRENT_TIMESTAMP AT TIME ZONE 'America/Los_Angeles')::time < h.close_time)
+                       END AS open_now
+                FROM restaurants r
+                """);
+
+        if (filters.getCuisineIds() != null && !filters.getCuisineIds().isEmpty()) {
+            sql.append(" JOIN restaurant_cuisines rc ON rc.restaurant_id = r.restaurant_id ");
+        }
+
+        sql.append("""
+                LEFT JOIN restaurant_hours h
+                  ON h.restaurant_id = r.restaurant_id
+                 AND h.day_of_week = EXTRACT(DOW FROM (CURRENT_TIMESTAMP AT TIME ZONE 'America/Los_Angeles'))
+                WHERE r.latitude IS NOT NULL
+                  AND r.longitude IS NOT NULL
+                """);
 
         List<Object> params = new ArrayList<>();
 
@@ -68,15 +93,34 @@ public class MapService {
             double latDelta = radiusMiles / 69.0;
             double lngDelta = radiusMiles / Math.max(1e-9, (69.0 * Math.cos(Math.toRadians(userLat))));
 
-            sql.append(" AND latitude BETWEEN ? AND ? ");
-            sql.append(" AND longitude BETWEEN ? AND ? ");
+            sql.append(" AND r.latitude BETWEEN ? AND ? ");
+            sql.append(" AND r.longitude BETWEEN ? AND ? ");
             params.add(userLat - latDelta);
             params.add(userLat + latDelta);
             params.add(userLng - lngDelta);
             params.add(userLng + lngDelta);
         }
+        if (filters.getCuisineIds() != null && !filters.getCuisineIds().isEmpty()) {
+            sql.append(" AND rc.cuisine_id IN (");
+            for (int i = 0; i < filters.getCuisineIds().size(); i++) {
+                if (i > 0) sql.append(", ");
+                sql.append("?");
+                params.add(filters.getCuisineIds().get(i));
+            }
+            sql.append(") ");
+        }
 
-        sql.append(" ORDER BY COALESCE(avg_rating, 0) DESC, review_count DESC, restaurant_id ASC ");
+        if (filters.getPriceTiers() != null && !filters.getPriceTiers().isEmpty()) {
+            sql.append(" AND r.price_tier IN (");
+            for (int i = 0; i < filters.getPriceTiers().size(); i++) {
+                if (i > 0) sql.append(", ");
+                sql.append("?");
+                params.add(filters.getPriceTiers().get(i));
+            }
+            sql.append(") ");
+        }
+
+        sql.append(" ORDER BY avg_rating DESC, review_count DESC, restaurant_id ASC ");
 
         try (Connection conn = DBConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
@@ -98,11 +142,19 @@ public class MapService {
                 while (rs.next()) {
                     long restaurantId = rs.getLong("restaurant_id");
                     String name = rs.getString("name");
+                    String address = rs.getString("address");
+                    String cuisine = rs.getString("cuisine");
                     double latitude = rs.getDouble("latitude");
                     double longitude = rs.getDouble("longitude");
                     double avgRating = rs.getDouble("avg_rating");
                     int reviewCount = rs.getInt("review_count");
 
+                    int priceTier = rs.getInt("price_tier");
+                    Integer priceTierValue = rs.wasNull() ? null : priceTier;
+
+                    boolean openNow = rs.getBoolean("open_now");
+                    Boolean openNowValue = rs.wasNull() ? null : openNow;
+                    
                     double distanceMiles = Double.NaN;
                     if (userLat != null && userLng != null) {
                         distanceMiles = computeDistanceMiles(userLat, userLng, latitude, longitude);
@@ -112,14 +164,22 @@ public class MapService {
                     }
 
                     double finalScore = clampScore(avgRating + personalBoost.getOrDefault(restaurantId, 0.0));
-
+                    
                     if (minRank != null && finalScore < minRank) {
+                        continue;
+                    }
+
+                    if (Boolean.TRUE.equals(filters.getOpenNow()) && !Boolean.TRUE.equals(openNowValue)) {
                         continue;
                     }
 
                     MapResult result = new MapResult();
                     result.setRestaurantId(restaurantId);
                     result.setName(name);
+                    result.setAddress(address);
+                    result.setCuisine(cuisine);
+                    result.setPriceTier(priceTierValue);
+                    result.setOpenNow(openNowValue);
                     result.setLatitude(latitude);
                     result.setLongitude(longitude);
                     result.setRankScore(finalScore);

@@ -176,7 +176,7 @@
         const visitBtn = document.createElement('button');
         visitBtn.type = 'button';
         visitBtn.className = 'visit-btn';
-        visitBtn.textContent = 'Mark as visited';
+        visitBtn.textContent = 'Move to rankings';
         visitBtn.addEventListener('click', () => moveToVisited(entry));
         actions.appendChild(visitBtn);
 
@@ -219,7 +219,7 @@
     }
 
     async function moveToVisited(entry) {
-      if (!confirm(`Move "${entry.restaurantName || 'this restaurant'}" to your visited list?`)) return;
+    	if (!confirm(`Move "${entry.restaurantName || 'this restaurant'}" to your rankings?`)) return;
       try {
         const res = await fetch('api/wishlist/move-to-visited', {
           method: 'POST',
@@ -232,7 +232,7 @@
           showStatus(payload.error || 'Failed to move.', true);
           return;
         }
-        showStatus('Moved to visited list.', false);
+        showStatus('Moved to rankings.', false);
         loadWishlist();
       } catch (err) {
         showStatus('Network error.', true);
