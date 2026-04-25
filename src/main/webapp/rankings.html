@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Rankings</title>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f5f5f5;
+      color: #1f2937;
+    }
+    header {
+      background: #7c3aed;
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      line-height: 1.2;
+    }
+    header nav {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    header a {
+      color: white;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      opacity: 0.95;
+    }
+    header a:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    main {
+      max-width: 960px;
+      margin: 24px auto;
+      padding: 0 16px;
+      display: grid;
+      gap: 18px;
+    }
+    .card {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+      padding: 18px;
+    }
+    h2, h3 {
+      margin-top: 0;
+    }
+    .muted {
+      color: #6b7280;
+      font-size: 0.92rem;
+    }
+    .status {
+      padding: 12px;
+      border-radius: 10px;
+      display: none;
+    }
+    .status.ok {
+      display: block;
+      background: #dcfce7;
+      color: #166534;
+    }
+    .status.error {
+      display: block;
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .progress {
+      font-weight: 700;
+      margin-top: 8px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+    label {
+      display: block;
+      margin: 0 0 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 0.95rem;
+    }
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.92rem;
+      cursor: pointer;
+    }
+    .primary {
+      background: #7c3aed;
+      color: white;
+    }
+    .primary:hover {
+      background: #6d28d9;
+    }
+    .secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+    .secondary:hover {
+      background: #d1d5db;
+    }
+    .danger {
+      background: #dc2626;
+      color: white;
+    }
+    .danger:hover {
+      background: #b91c1c;
+    }
+    .ranking-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .ranking-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 14px;
+      background: #fafafa;
+    }
+    .ranking-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .rank-badge {
+      display: inline-block;
+      min-width: 32px;
+      text-align: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #ede9fe;
+      color: #5b21b6;
+      font-weight: 700;
+    }
+    .item-title {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .item-meta {
+      color: #6b7280;
+      font-size: 0.9rem;
+      margin-top: 6px;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .actions input {
+      width: 110px;
+    }
+    .empty {
+      text-align: center;
+      color: #6b7280;
+      padding: 28px 12px;
+      border: 1px dashed #d1d5db;
+      border-radius: 12px;
+      background: #fafafa;
+    }
+    @media (max-width: 720px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      header nav {
+        justify-content: flex-start;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .actions input {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>My Rankings</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="map.html">Map</a>
+      <a href="wishlist.html">Wishlist</a>
+      <a href="photos.html">Photos</a>
+    </nav>
+  </header>
+
+  <main>
+    <div id="status" class="status"></div>
+
+    <section class="card">
+      <h2>Ranking Progress</h2>
+      <p class="muted">You need at least 3 ranked restaurants to complete the initial baseline.</p>
+      <div id="baselineProgress" class="progress">0 / 3 complete</div>
+    </section>
+
+    <section class="card">
+      <h2>Add Restaurant to Rankings</h2>
+      <p class="muted">For now, enter a restaurant ID directly. This matches the current backend state of the project.</p>
+      <div class="form-grid">
+        <div>
+          <label for="restaurantId">Restaurant ID</label>
+          <input id="restaurantId" type="number" min="1" />
+        </div>
+        <div>
+          <label for="rankPosition">Rank Position</label>
+          <input id="rankPosition" type="number" min="1" />
+        </div>
+        <button id="addBtn" class="primary" type="button">Add Ranking</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="ranking-top">
+        <div>
+          <h2 style="margin-bottom: 6px;">Current Rankings</h2>
+          <div class="muted">Ordered overall ranking list</div>
+        </div>
+        <button id="refreshBtn" class="secondary" type="button">Refresh</button>
+      </div>
+
+      <div id="rankingList" class="ranking-list"></div>
+    </section>
+  </main>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const baselineEl = document.getElementById('baselineProgress');
+    const rankingListEl = document.getElementById('rankingList');
+    const restaurantIdEl = document.getElementById('restaurantId');
+    const rankPositionEl = document.getElementById('rankPosition');
+    const addBtn = document.getElementById('addBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    function showStatus(message, isError = false) {
+      statusEl.textContent = message;
+      statusEl.className = 'status ' + (isError ? 'error' : 'ok');
+      if (!isError) {
+        setTimeout(() => {
+          statusEl.className = 'status';
+          statusEl.textContent = '';
+        }, 2500);
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[ch]));
+    }
+
+    function updateBaselineProgress(rankings) {
+      const count = rankings.length;
+      const target = 3;
+      baselineEl.textContent = `${count} / ${target} complete`;
+    }
+
+    async function loadRankings() {
+      try {
+        const res = await fetch('api/rankings', {
+          credentials: 'same-origin'
+        });
+
+        const text = await res.text();
+        let data = [];
+        try { data = JSON.parse(text); } catch (_) {}
+
+        if (res.status === 401) {
+          showStatus('You must be logged in to view your rankings.', true);
+          rankingListEl.innerHTML = '<div class="empty">Please log in first.</div>';
+          baselineEl.textContent = '0 / 3 complete';
+          return;
+        }
+
+        if (!res.ok) {
+          showStatus((data && data.error) || 'Failed to load rankings.', true);
+          return;
+        }
+
+        renderRankings(data);
+      } catch (err) {
+        console.error(err);
+        showStatus('Network error while loading rankings.', true);
+      }
+    }
+
+    function renderRankings(rankings) {
+      updateBaselineProgress(rankings);
+      rankingListEl.innerHTML = '';
+
+      if (!rankings || rankings.length === 0) {
+        rankingListEl.innerHTML = `
+          <div class="empty">
+            You have not ranked any restaurants yet.
+          </div>
+        `;
+        return;
+      }
+
+      rankings.forEach((entry) => {
+        const card = document.createElement('div');
+        card.className = 'ranking-item';
+
+        card.innerHTML = `
+          <div class="ranking-top">
+            <div>
+              <div class="item-title">
+                <span class="rank-badge">#${entry.rankPosition}</span>
+                Restaurant ID ${escapeHtml(entry.restaurantId)}
+              </div>
+              <div class="item-meta">
+                Ranking ID: ${escapeHtml(entry.rankingId)}<br/>
+                Last updated: ${entry.updatedAt ? escapeHtml(entry.updatedAt) : 'n/a'}
+              </div>
+            </div>
+          </div>
+        `;
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+
+        const newPosInput = document.createElement('input');
+        newPosInput.type = 'number';
+        newPosInput.min = '1';
+        newPosInput.value = entry.rankPosition;
+
+        const moveBtn = document.createElement('button');
+        moveBtn.className = 'secondary';
+        moveBtn.textContent = 'Update Position';
+        moveBtn.addEventListener('click', () => updateRanking(entry.restaurantId, newPosInput.value));
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'danger';
+        deleteBtn.textContent = 'Remove';
+        deleteBtn.addEventListener('click', () => deleteRanking(entry.restaurantId));
+
+        actions.appendChild(newPosInput);
+        actions.appendChild(moveBtn);
+        actions.appendChild(deleteBtn);
+
+        card.appendChild(actions);
+        rankingListEl.appendChild(card);
+      });
+    }
+
+    async function addRanking() {
+      const restaurantId = Number(restaurantIdEl.value);
+      const rankPosition = Number(rankPositionEl.value);
+
+      if (!restaurantId || restaurantId < 1) {
+        showStatus('Please enter a valid restaurant ID.', true);
+        return;
+      }
+      if (!rankPosition || rankPosition < 1) {
+        showStatus('Please enter a valid rank position.', true);
+        return;
+      }
+
+      try {
+        const res = await fetch('api/rankings', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            restaurantId,
+            rankPosition
+          })
+        });
+
+        const text = await res.text();
+        let data = {};
+        try { data = JSON.parse(text); } catch (_) {}
+
+        if (!res.ok) {
+          showStatus(data.error || 'Failed to add ranking.', true);
+          return;
+        }
+
+        restaurantIdEl.value = '';
+        rankPositionEl.value = '';
+        showStatus('Ranking added successfully.');
+        loadRankings();
+      } catch (err) {
+        console.error(err);
+        showStatus('Network error while adding ranking.', true);
+      }
+    }
+
+    async function updateRanking(restaurantId, rankPosition) {
+      const pos = Number(rankPosition);
+      if (!pos || pos < 1) {
+        showStatus('Rank position must be greater than 0.', true);
+        return;
+      }
+
+      try {
+        const res = await fetch('api/rankings', {
+          method: 'PUT',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            restaurantId,
+            rankPosition: pos
+          })
+        });
+
+        const text = await res.text();
+        let data = {};
+        try { data = JSON.parse(text); } catch (_) {}
+
+        if (!res.ok) {
+          showStatus(data.error || 'Failed to update ranking.', true);
+          return;
+        }
+
+        showStatus('Ranking updated successfully.');
+        loadRankings();
+      } catch (err) {
+        console.error(err);
+        showStatus('Network error while updating ranking.', true);
+      }
+    }
+
+    async function deleteRanking(restaurantId) {
+      if (!confirm('Remove this restaurant from your rankings?')) return;
+
+      try {
+        const res = await fetch(`api/rankings?restaurantId=${encodeURIComponent(restaurantId)}`, {
+          method: 'DELETE',
+          credentials: 'same-origin'
+        });
+
+        const text = await res.text();
+        let data = {};
+        try { data = JSON.parse(text); } catch (_) {}
+
+        if (!res.ok) {
+          showStatus(data.error || 'Failed to delete ranking.', true);
+          return;
+        }
+
+        showStatus('Ranking removed successfully.');
+        loadRankings();
+      } catch (err) {
+        console.error(err);
+        showStatus('Network error while deleting ranking.', true);
+      }
+    }
+
+    addBtn.addEventListener('click', addRanking);
+    refreshBtn.addEventListener('click', loadRankings);
+
+    loadRankings();
+  </script>
+</body>
+</html>

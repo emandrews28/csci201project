@@ -9,21 +9,56 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
   <style>
     :root { color-scheme: light; }
-    body { margin: 0; font-family: Arial, sans-serif; background: #f5f5f5; color: #1f2937; }
-    header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: #0f766e; color: white; }
-    header a { color: white; text-decoration: none; font-weight: 600; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f5f5f5;
+      color: #1f2937;
+    }
+    header {
+      background: #0f766e;
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      line-height: 1.2;
+    }
+    header nav {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    header a {
+      color: white;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      opacity: 0.95;
+    }
+    header a:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
     main { display: grid; grid-template-columns: 340px 1fr; gap: 16px; padding: 16px; min-height: calc(100vh - 64px); box-sizing: border-box; }
     .panel, .map-shell { background: white; border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.08); overflow: hidden; }
     .panel { padding: 16px; display: grid; gap: 14px; align-content: start; }
     .panel h2, .panel h3 { margin: 0; }
     label { display: block; margin: 0 0 6px; font-size: 0.9rem; font-weight: 700; }
-    input[type="number"], input[type="text"], select { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #d1d5db; font-size: 0.95rem; }
-    input[type="range"] { width: 100%; }
+    input[type="number"], input[type="text"], select { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 0.95rem; }input[type="range"] { width: 100%; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .button-row { display: flex; flex-wrap: wrap; gap: 10px; }
-    button { border: none; border-radius: 10px; padding: 10px 14px; font-size: 0.95rem; cursor: pointer; }
+    button { border: none; border-radius: 8px; padding: 10px 14px; font-size: 0.92rem; cursor: pointer; }
     .primary { background: #0f766e; color: white; }
+    .primary:hover { background: #0d5f58; }
     .secondary { background: #e5e7eb; color: #111827; }
+    .secondary:hover { background: #d1d5db; }
     .status { font-size: 0.92rem; min-height: 1.2em; color: #4b5563; }
     .status.error { color: #b91c1c; }
     .status.ok { color: #047857; }
@@ -49,15 +84,34 @@
     .popup strong { display: block; margin-bottom: 4px; }
     .popup .small { font-size: 0.85rem; color: #4b5563; }
     .hidden { display: none; }
-    @media (max-width: 960px) { main { grid-template-columns: 1fr; } .map-shell { min-height: 560px; } }
+    @media (max-width: 720px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      header nav {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 960px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+      .map-shell {
+        min-height: 560px;
+      }
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>Nearby Restaurants Map</h1>
-    <nav style="display:flex; gap:14px;">
-      <a href="wishlist.html">Wishlist</a>
+    <nav>
       <a href="index.html">Home</a>
+      <a href="rankings.html">Rankings</a>
+      <a href="wishlist.html">Wishlist</a>
+      <a href="photos.html">Photos</a>
     </nav>
   </header>
   <main>

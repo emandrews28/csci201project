@@ -29,13 +29,20 @@ public class RankingServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         String userIdStr = request.getParameter("userId");
-        if (userIdStr == null) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print("{\"error\":\"userId required\"}");
-            return;
+        long userId;
+
+        if (userIdStr != null && !userIdStr.isBlank()) {
+            userId = Long.parseLong(userIdStr);
+        } else {
+            HttpSession session = request.getSession(false);
+            if (session == null || session.getAttribute("userId") == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.print("{\"error\":\"Not logged in\"}");
+                return;
+            }
+            userId = (long) session.getAttribute("userId");
         }
 
-        long userId = Long.parseLong(userIdStr);
         List<RankingEntry> rankings = rankingDAO.findByUser(userId);
         out.print(gson.toJson(rankings));
     }

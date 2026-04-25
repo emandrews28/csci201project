@@ -62,16 +62,37 @@
       color: #111827;
     }
     .register-btn:hover { background: #d1d5db; }
-    .error {
+    .form-footer {
       margin-top: 14px;
+      margin-bottom: 4px;
+      width: 100%;
+      text-align: center;
+    }
+    #error {
+      display: block !important;
+      width: 100% !important;
+      max-width: none !important;
       color: #b91c1c;
-      min-height: 1.2em;
+      font-size: 0.95rem;
+      line-height: 1.35;
+      text-align: center;
+      white-space: nowrap;
+      margin: 0 0 16px 0;
+      padding: 0;
+    }
+    #error:empty {
+      display: none !important;
     }
     .hint {
-      margin-top: 14px;
+      display: block !important;
+      width: 100% !important;
       color: #6b7280;
       font-size: 0.95rem;
+      line-height: 1.35;
       text-align: center;
+      margin: 0;
+      padding: 0;
+      white-space: nowrap;
     }
   </style>
 </head>
@@ -92,8 +113,10 @@
       </div>
     </form>
 
-    <div id="error" class="error"></div>
-    <div class="hint">Username and password are case-sensitive.</div>
+    <div class="form-footer">
+      <div id="error" class="error"></div>
+      <div class="hint">Username and password are case-sensitive.</div>
+    </div>
   </main>
 
   <script>

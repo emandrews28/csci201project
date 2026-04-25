@@ -6,7 +6,7 @@
   <title>Home</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       margin: 0;
       min-height: 100vh;
       display: flex;
@@ -18,9 +18,9 @@
     .card {
       background: white;
       padding: 32px;
-      border-radius: 12px;
+      border-radius: 14px;
       box-shadow: 0 6px 24px rgba(0,0,0,0.08);
-      width: min(92vw, 420px);
+      width: min(92vw, 520px);
       text-align: center;
     }
     .message {
@@ -32,11 +32,19 @@
       color: #0a7a2f;
       font-weight: 700;
     }
+    .error {
+      color: #991b1b;
+      font-weight: 700;
+    }   
     .button-row {
       display: flex;
       gap: 12px;
       justify-content: center;
       flex-wrap: wrap;
+    }
+    .button-row form {
+      margin: 0;
+      display: inline-block;
     }
     button, a.button {
       border: none;
@@ -45,13 +53,24 @@
       font-size: 1rem;
       cursor: pointer;
       text-decoration: none;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      box-sizing: border-box;
     }
     .logout-btn {
       background: #d93b3b;
       color: white;
     }
     .logout-btn:hover { background: #bf2e2e; }
+    .login-btn {
+      background: #374151;
+      color: white;
+    }
+    .login-btn:hover {
+      background: #1f2937;
+    }
     .photos-btn {
       background: #2563eb;
       color: white;
@@ -73,6 +92,13 @@
       color: #666;
       font-size: 0.95rem;
     }
+    .rankings-btn {
+      background: #7c3aed;
+      color: white;
+    }
+    .rankings-btn:hover {
+      background: #6d28d9;
+    }
   </style>
 </head>
 <body>
@@ -82,10 +108,11 @@
 
     <div class="button-row">
       <a class="button map-btn" href="map.html">Map</a>
+      <a class="button rankings-btn" href="rankings.html">Rankings</a>
       <a class="button wishlist-btn" href="wishlist.html">Wishlist</a>
       <a class="button photos-btn" href="photos.html">Photos</a>
       <form id="logoutForm" action="logout" method="post">
-        <button class="logout-btn" type="submit">Logout</button>
+        <button id="authButton" class="logout-btn" type="submit">Logout</button>
       </form>
     </div>
 
@@ -93,20 +120,73 @@
   </main>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const status = params.get('status');
-    const messageEl = document.getElementById('message');
+    async function checkSession() {
+      const params = new URLSearchParams(window.location.search);
+      const status = params.get('status');
+      const messageEl = document.getElementById('message');
+      const logoutForm = document.getElementById('logoutForm');
+      const authButton = document.getElementById('authButton');
 
-    if (status === 'logged_in') {
-      messageEl.textContent = 'Successfully logged in.';
-      messageEl.classList.add('success');
-    } else if (status === 'registered') {
-      messageEl.textContent = 'Successfully registered.';
-      messageEl.classList.add('success');
-    } else {
-      messageEl.textContent = 'You are logged in.';
-      messageEl.classList.add('success');
+      try {
+        const res = await fetch('api/session', {
+          credentials: 'same-origin'
+        });
+
+        if (res.status === 401) {
+          messageEl.textContent = 'You are not logged in.';
+          messageEl.classList.remove('success');
+          messageEl.classList.add('error');
+          
+          logoutForm.action = 'login.html';
+          logoutForm.method = 'get';
+          authButton.textContent = 'Login';
+          authButton.classList.remove('logout-btn');
+          authButton.classList.add('login-btn');
+          return;
+        }
+
+        const data = await res.json();
+
+        if (!data.loggedIn) {
+          messageEl.textContent = 'You are not logged in.';
+          messageEl.classList.remove('success');
+          messageEl.classList.add('error');
+          
+          logoutForm.action = 'login.html';
+          logoutForm.method = 'get';
+          authButton.textContent = 'Login';
+          authButton.classList.remove('logout-btn');
+          authButton.classList.add('login-btn');
+          return;
+        }
+
+        if (status === 'logged_in') {
+          messageEl.textContent = 'Successfully logged in.';
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (status === 'registered') {
+          messageEl.textContent = 'Successfully registered.';
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+          messageEl.textContent = 'You are logged in.';
+        }
+
+        messageEl.classList.remove('error');
+        messageEl.classList.add('success');
+        
+        logoutForm.action = 'logout';
+        logoutForm.method = 'post';
+        authButton.textContent = 'Logout';
+        authButton.classList.remove('login-btn');
+        authButton.classList.add('logout-btn');
+      } catch (err) {
+        console.error(err);
+        messageEl.textContent = 'Unable to check login status.';
+        messageEl.classList.remove('success');
+        messageEl.classList.add('error');
+      }
     }
+
+    checkSession();
   </script>
 </body>
 </html>
