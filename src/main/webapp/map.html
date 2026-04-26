@@ -267,6 +267,28 @@
         color: #166534;
       }
 
+      .closed {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .unknown {
+        background: #e5e7eb;
+        color: #374151;
+      }
+
+      .leaflet-marker-icon.open-marker {
+        filter: hue-rotate(-85deg) saturate(1.4);
+      }
+
+      .leaflet-marker-icon.closed-marker {
+        filter: hue-rotate(145deg) saturate(1.6);
+      }
+
+      .leaflet-marker-icon.unknown-marker {
+        filter: grayscale(1) saturate(0.6);
+      }
+
       .view-toggle {
         display: flex;
         gap: 8px;
@@ -758,6 +780,16 @@
         setStatus(`Loaded ${payload.length} restaurants.`, false);
       }
 
+      function getMarkerStatusClass(restaurant) {
+        if (restaurant.openNow === true) {
+          return 'open-marker';
+        }
+        if (restaurant.openNow === false) {
+          return 'closed-marker';
+        }
+        return 'unknown-marker';
+      }
+
       function renderRestaurants(restaurants) {
         currentRestaurants = restaurants;
         activeRestaurantId = null;
@@ -766,6 +798,12 @@
         resultsEl.innerHTML = '';
         restaurants.forEach((restaurant) => {
           const marker = L.marker([restaurant.latitude, restaurant.longitude]);
+          marker.on('add', () => {
+            const el = marker.getElement();
+            if (el) {
+              el.classList.add(getMarkerStatusClass(restaurant));
+            }
+          });
           marker.bindPopup(buildPopupHtml(restaurant));
           marker.on('click', () => selectRestaurant(restaurant));
           markersById.set(restaurant.restaurantId, marker);
@@ -846,10 +884,14 @@
       }
 
       function buildPopupHtml(restaurant) {
+        const openText = restaurant.openNow === true ? 'Open now' :
+          restaurant.openNow === false ? 'Currently closed' :
+          'Hours unavailable';
         const price = restaurant.priceTier ? '$'.repeat(restaurant.priceTier) : 'n/a';
         return `
           <div class="popup">
             <strong>${escapeHtml(restaurant.name)}</strong>
+            <div class="small">${openText}</div>
             <div class="small">Rank score: ${formatScore(restaurant.rankScore)}</div>
             <div class="small">Distance: ${formatDistance(restaurant.distanceMiles)}</div>
             <div class="small">Cuisine: ${escapeHtml(restaurant.cuisine || 'n/a')}</div>
@@ -871,8 +913,16 @@
 
       function formatBadges(restaurant) {
         const badges = [];
-        if (restaurant.openNow !== false) badges.push('<span class="badge open">Open</span>');
-        if (restaurant.priceTier) badges.push(`<span class="badge">${'$'.repeat(restaurant.priceTier)}</span>`);
+        if (restaurant.openNow === true) {
+          badges.push('<span class="badge open">Open</span>');
+        } else if (restaurant.openNow === false) {
+          badges.push('<span class="badge closed">Closed</span>');
+        } else {
+          badges.push('<span class="badge unknown">Unknown</span>');
+        }
+        if (restaurant.priceTier) {
+          badges.push(`<span class="badge">${'$'.repeat(restaurant.priceTier)}</span>`);
+        }
         return badges.join(' ');
       }
 
