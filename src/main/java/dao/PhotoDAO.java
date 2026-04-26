@@ -12,6 +12,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PhotoDAO {
+	
+    private static final String PHOTO_SELECT = """
+            SELECT p.photo_id,
+                   p.user_id,
+                   p.restaurant_id,
+                   p.review_id,
+                   p.image_url,
+                   p.caption,
+                   p.created_at,
+                   r.name AS restaurant_name,
+                   u.username AS username
+            FROM photos p
+            LEFT JOIN restaurants r ON r.restaurant_id = p.restaurant_id
+            LEFT JOIN users u ON u.user_id = p.user_id
+            """;
 
     private Photo mapPhoto(ResultSet rs) throws SQLException {
         Photo photo = new Photo();
@@ -23,6 +38,13 @@ public class PhotoDAO {
         photo.setImageUrl(rs.getString("image_url"));
         photo.setCaption(rs.getString("caption"));
         photo.setCreatedAt(rs.getTimestamp("created_at"));
+
+        try {
+            photo.setRestaurantName(rs.getString("restaurant_name"));
+            photo.setUsername(rs.getString("username"));
+        } catch (SQLException ignored) {
+        }
+
         return photo;
     }
 
@@ -57,10 +79,8 @@ public class PhotoDAO {
     }
 
     public Photo findById(long photoId) {
-        String sql = """
-                SELECT photo_id, user_id, restaurant_id, review_id, image_url, caption, created_at
-                FROM photos
-                WHERE photo_id = ?
+        String sql = PHOTO_SELECT + """
+                WHERE p.photo_id = ?
                 """;
         try (Connection conn = DBConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -75,31 +95,25 @@ public class PhotoDAO {
     }
 
     public List<Photo> findByRestaurant(long restaurantId) {
-        String sql = """
-                SELECT photo_id, user_id, restaurant_id, review_id, image_url, caption, created_at
-                FROM photos
-                WHERE restaurant_id = ?
-                ORDER BY created_at DESC
+        String sql = PHOTO_SELECT + """
+                WHERE p.restaurant_id = ?
+                ORDER BY p.created_at DESC
                 """;
         return queryList(sql, restaurantId);
     }
 
     public List<Photo> findByUser(long userId) {
-        String sql = """
-                SELECT photo_id, user_id, restaurant_id, review_id, image_url, caption, created_at
-                FROM photos
-                WHERE user_id = ?
-                ORDER BY created_at DESC
+        String sql = PHOTO_SELECT + """
+                WHERE p.user_id = ?
+                ORDER BY p.created_at DESC
                 """;
         return queryList(sql, userId);
     }
 
     public List<Photo> findByReview(long reviewId) {
-        String sql = """
-                SELECT photo_id, user_id, restaurant_id, review_id, image_url, caption, created_at
-                FROM photos
-                WHERE review_id = ?
-                ORDER BY created_at ASC
+        String sql = PHOTO_SELECT + """
+                WHERE p.review_id = ?
+                ORDER BY p.created_at ASC
                 """;
         return queryList(sql, reviewId);
     }

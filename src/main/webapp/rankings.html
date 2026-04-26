@@ -1,385 +1,387 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>My Rankings</title>
-<style>
-:root {
-	color-scheme: light;
-}
 
-body {
-	margin: 0;
-	font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-	background: #f5f5f5;
-	color: #1f2937;
-}
-
-header {
-	background: #7c3aed;
-	color: white;
-	padding: 16px 24px;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 16px;
-}
-
-header h1 {
-	margin: 0;
-	font-size: 1.2rem;
-	line-height: 1.2;
-}
-
-header nav {
-	display: flex;
-	gap: 14px;
-	flex-wrap: wrap;
-	justify-content: flex-end;
-}
-
-header a {
-	color: white;
-	text-decoration: none;
-	font-size: 0.95rem;
-	font-weight: 600;
-	opacity: 0.95;
-}
-
-header a:hover {
-	opacity: 1;
-	text-decoration: underline;
-}
-
-main {
-	max-width: 960px;
-	margin: 24px auto;
-	padding: 0 16px;
-	display: grid;
-	gap: 18px;
-}
-
-.card {
-	background: white;
-	border-radius: 14px;
-	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-	padding: 18px;
-}
-
-h2, h3 {
-	margin-top: 0;
-}
-
-.muted {
-	color: #6b7280;
-	font-size: 0.92rem;
-}
-
-.status {
-	padding: 12px;
-	border-radius: 10px;
-	display: none;
-}
-
-.status.ok {
-	display: block;
-	background: #dcfce7;
-	color: #166534;
-}
-
-.status.error {
-	display: block;
-	background: #fee2e2;
-	color: #991b1b;
-}
-
-.progress {
-	font-weight: 700;
-	margin-top: 8px;
-}
-
-.form-grid {
-	display: grid;
-	grid-template-columns: 1fr 1fr auto;
-	gap: 10px;
-	align-items: end;
-}
-
-label {
-	display: block;
-	margin: 0 0 6px;
-	font-size: 0.9rem;
-	font-weight: 600;
-}
-
-input {
-	width: 100%;
-	box-sizing: border-box;
-	padding: 10px 12px;
-	border-radius: 8px;
-	border: 1px solid #d1d5db;
-	font-size: 0.95rem;
-}
-
-button {
-	border: none;
-	border-radius: 8px;
-	padding: 10px 14px;
-	font-size: 0.92rem;
-	cursor: pointer;
-}
-
-button:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.primary {
-	background: #7c3aed;
-	color: white;
-}
-
-.primary:not(:disabled):hover {
-	background: #6d28d9;
-}
-
-.secondary {
-	background: #e5e7eb;
-	color: #111827;
-}
-
-.secondary:not(:disabled):hover {
-	background: #d1d5db;
-}
-
-.danger {
-	background: #dc2626;
-	color: white;
-}
-
-.danger:not(:disabled):hover {
-	background: #b91c1c;
-}
-
-.ranking-list {
-	display: grid;
-	gap: 12px;
-	margin-top: 12px;
-}
-
-.ranking-item {
-	border: 1px solid #e5e7eb;
-	border-radius: 12px;
-	padding: 14px;
-	background: #fafafa;
-}
-
-.ranking-top {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 12px;
-	flex-wrap: wrap;
-}
-
-.rank-badge {
-	display: inline-block;
-	min-width: 32px;
-	text-align: center;
-	padding: 4px 10px;
-	border-radius: 999px;
-	background: #ede9fe;
-	color: #5b21b6;
-	font-weight: 700;
-}
-
-.item-title {
-	font-size: 1rem;
-	font-weight: 700;
-}
-
-.item-meta {
-	color: #6b7280;
-	font-size: 0.9rem;
-	margin-top: 6px;
-}
-
-.actions {
-	display: flex;
-	gap: 8px;
-	flex-wrap: wrap;
-	margin-top: 12px;
-}
-
-.actions input {
-	width: 110px;
-}
-
-.empty {
-	text-align: center;
-	color: #6b7280;
-	padding: 28px 12px;
-	border: 1px dashed #d1d5db;
-	border-radius: 12px;
-	background: #fafafa;
-}
-
-.hidden {
-	display: none;
-}
-
-.dropdown {
-	position: absolute;
-	top: 100%;
-	left: 0;
-	right: 0;
-	margin-top: 6px;
-	border: 1px solid #d1d5db;
-	border-radius: 8px;
-	background: white;
-	max-height: 220px;
-	overflow-y: auto;
-	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-	z-index: 20;
-}
-
-.dropdown-item {
-	padding: 10px 12px;
-	cursor: pointer;
-	border-bottom: 1px solid #f3f4f6;
-}
-
-.dropdown-item:last-child {
-	border-bottom: none;
-}
-
-.dropdown-item:hover {
-	background: #f3f4f6;
-}
-
-.dropdown-name {
-	font-weight: 700;
-}
-
-.dropdown-meta {
-	color: #6b7280;
-	font-size: 0.85rem;
-	margin-top: 2px;
-}
-
-.restaurant-search-wrap {
-	position: relative;
-}
-
-@media ( max-width : 720px) {
-	header {
-		flex-direction: column;
-		align-items: flex-start;
-	}
-	header nav {
-		justify-content: flex-start;
-	}
-	.form-grid {
-		grid-template-columns: 1fr;
-	}
-	.actions {
-		flex-direction: column;
-		align-items: stretch;
-	}
-	.actions input {
-		width: 100%;
-	}
-}
-</style>
-</head>
-<body>
-	<header>
-		<h1>My Rankings</h1>
-		<nav>
-			<a href="index.html">Home</a> <a href="map.html">Map</a> <a
-				href="wishlist.html">Wishlist</a> <a href="photos.html">Photos</a>
-		</nav>
-	</header>
-
-	<main>
-		<div id="status" class="status"></div>
-
-		<section class="card">
-			<h2>Ranking Progress</h2>
-			<p class="muted">Rank at least 3 restaurants so your
-				recommendations can be personalized.</p>
-			<div id="baselineProgress" class="progress">0 / 3 complete</div>
-		</section>
-
-		<section class="card">
-			<h2>Add Restaurant to Rankings</h2>
-			<p class="muted">Search for a restaurant by name, then choose
-				where it belongs in your ranking.</p>
-			<div class="form-grid">
-				<div class="restaurant-search-wrap">
-					<label for="restaurantSearch">Restaurant</label> <input
-						id="restaurantSearch" type="text"
-						placeholder="Search restaurant name..." autocomplete="off" />
-					<div id="restaurantDropdown" class="dropdown hidden"></div>
-				</div>
-				<div>
-					<label for="rankPosition">Rank Position</label> <input
-						id="rankPosition" type="number" min="1" />
-				</div>
-				<button id="addBtn" class="primary" type="button">Add
-					Ranking</button>
-			</div>
-		</section>
-
-		<section class="card">
-			<div class="ranking-top">
-				<div>
-					<h2 style="margin-bottom: 6px;">Current Rankings</h2>
-					<div class="muted">Ordered overall ranking list</div>
-				</div>
-				<button id="refreshBtn" class="secondary" type="button">Refresh</button>
-			</div>
-
-			<div id="rankingList" class="ranking-list"></div>
-		</section>
-	</main>
-
-	<script>
-    const statusEl = document.getElementById('status');
-    const baselineEl = document.getElementById('baselineProgress');
-    const rankingListEl = document.getElementById('rankingList');
-    const restaurantSearchEl = document.getElementById('restaurantSearch');
-    const restaurantDropdownEl = document.getElementById('restaurantDropdown');
-    const rankPositionEl = document.getElementById('rankPosition');
-
-    let selectedRestaurantId = null;
-    let restaurantSearchTimer = null;
-    const addBtn = document.getElementById('addBtn');
-    const refreshBtn = document.getElementById('refreshBtn');
-
-    function showStatus(message, isError = false) {
-      statusEl.textContent = message;
-      statusEl.className = 'status ' + (isError ? 'error' : 'ok');
-      if (!isError) {
-        setTimeout(() => {
-          statusEl.className = 'status';
-          statusEl.textContent = '';
-        }, 2500);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Rankings</title>
+    <style>
+      :root {
+        color-scheme: light;
       }
-    }
 
-    function escapeHtml(value) {
-      return String(value || '').replace(/[&<>"']/g, (ch) => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      }[ch]));
-    }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background: #f5f5f5;
+        color: #1f2937;
+      }
 
-    function updateBaselineProgress(rankings) {
+      header {
+        background: #7c3aed;
+        color: white;
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 1.2rem;
+        line-height: 1.2;
+      }
+
+      header nav {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      header a {
+        color: white;
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 600;
+        opacity: 0.95;
+      }
+
+      header a:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
+      main {
+        max-width: 960px;
+        margin: 24px auto;
+        padding: 0 16px;
+        display: grid;
+        gap: 18px;
+      }
+
+      .card {
+        background: white;
+        border-radius: 14px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+        padding: 18px;
+      }
+
+      h2,
+      h3 {
+        margin-top: 0;
+      }
+
+      .muted {
+        color: #6b7280;
+        font-size: 0.92rem;
+      }
+
+      .status {
+        padding: 12px;
+        border-radius: 10px;
+        display: none;
+      }
+
+      .status.ok {
+        display: block;
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .status.error {
+        display: block;
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .progress {
+        font-weight: 700;
+        margin-top: 8px;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 10px;
+        align-items: end;
+      }
+
+      label {
+        display: block;
+        margin: 0 0 6px;
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        font-size: 0.95rem;
+      }
+
+      button {
+        border: none;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 0.92rem;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .primary {
+        background: #7c3aed;
+        color: white;
+      }
+
+      .primary:not(:disabled):hover {
+        background: #6d28d9;
+      }
+
+      .secondary {
+        background: #e5e7eb;
+        color: #111827;
+      }
+
+      .secondary:not(:disabled):hover {
+        background: #d1d5db;
+      }
+
+      .danger {
+        background: #dc2626;
+        color: white;
+      }
+
+      .danger:not(:disabled):hover {
+        background: #b91c1c;
+      }
+
+      .ranking-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .ranking-item {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 14px;
+        background: #fafafa;
+      }
+
+      .ranking-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .rank-badge {
+        display: inline-block;
+        min-width: 32px;
+        text-align: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #ede9fe;
+        color: #5b21b6;
+        font-weight: 700;
+      }
+
+      .item-title {
+        font-size: 1rem;
+        font-weight: 700;
+      }
+
+      .item-meta {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-top: 6px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+
+      .actions input {
+        width: 110px;
+      }
+
+      .empty {
+        text-align: center;
+        color: #6b7280;
+        padding: 28px 12px;
+        border: 1px dashed #d1d5db;
+        border-radius: 12px;
+        background: #fafafa;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        margin-top: 6px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: white;
+        max-height: 220px;
+        overflow-y: auto;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        z-index: 20;
+      }
+
+      .dropdown-item {
+        padding: 10px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #f3f4f6;
+      }
+
+      .dropdown-item:last-child {
+        border-bottom: none;
+      }
+
+      .dropdown-item:hover {
+        background: #f3f4f6;
+      }
+
+      .dropdown-name {
+        font-weight: 700;
+      }
+
+      .dropdown-meta {
+        color: #6b7280;
+        font-size: 0.85rem;
+        margin-top: 2px;
+      }
+
+      .restaurant-search-wrap {
+        position: relative;
+      }
+
+      @media (max-width : 720px) {
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        header nav {
+          justify-content: flex-start;
+        }
+
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .actions input {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>My Rankings</h1>
+      <nav>
+        <a href="index.html">Home</a> <a href="map.html">Map</a> <a href="wishlist.html">Wishlist</a> <a href="photos.html">Photos</a>
+      </nav>
+    </header>
+
+    <main>
+      <div id="status" class="status"></div>
+
+      <section class="card">
+        <h2>Ranking Progress</h2>
+        <p class="muted">Rank at least 3 restaurants so your
+          recommendations can be personalized.</p>
+        <div id="baselineProgress" class="progress">0 / 3 complete</div>
+      </section>
+
+      <section class="card">
+        <h2>Add Restaurant to Rankings</h2>
+        <p class="muted">Search for a restaurant by name, then choose
+          where it belongs in your ranking.</p>
+        <div class="form-grid">
+          <div class="restaurant-search-wrap">
+            <label for="restaurantSearch">Restaurant</label> <input id="restaurantSearch" type="text" placeholder="Search restaurant name..." autocomplete="off" />
+            <div id="restaurantDropdown" class="dropdown hidden"></div>
+          </div>
+          <div>
+            <label for="rankPosition">Rank Position</label> <input id="rankPosition" type="number" min="1" />
+          </div>
+          <button id="addBtn" class="primary" type="button">Add
+            Ranking</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="ranking-top">
+          <div>
+            <h2 style="margin-bottom: 6px;">Current Rankings</h2>
+            <div class="muted">Ordered overall ranking list</div>
+          </div>
+          <button id="refreshBtn" class="secondary" type="button">Refresh</button>
+        </div>
+
+        <div id="rankingList" class="ranking-list"></div>
+      </section>
+    </main>
+
+    <script>
+      const statusEl = document.getElementById('status');
+      const baselineEl = document.getElementById('baselineProgress');
+      const rankingListEl = document.getElementById('rankingList');
+      const restaurantSearchEl = document.getElementById('restaurantSearch');
+      const restaurantDropdownEl = document.getElementById('restaurantDropdown');
+      const rankPositionEl = document.getElementById('rankPosition');
+      let selectedRestaurantId = null;
+      let restaurantSearchTimer = null;
+      const addBtn = document.getElementById('addBtn');
+      const refreshBtn = document.getElementById('refreshBtn');
+
+      function showStatus(message, isError = false) {
+        statusEl.textContent = message;
+        statusEl.className = 'status ' + (isError ? 'error' : 'ok');
+        if (!isError) {
+          setTimeout(() => {
+            statusEl.className = 'status';
+            statusEl.textContent = '';
+          }, 2500);
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, (ch) => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        } [ch]));
+      }
+
+      function updateBaselineProgress(rankings) {
         const count = rankings.length;
         const target = 3;
         if (count >= target) {
@@ -388,70 +390,59 @@ button:disabled {
           baselineEl.textContent = `${count} / ${target} restaurants ranked`;
         }
       }
-
-    async function loadRankings() {
-      try {
-        const res = await fetch('api/rankings', {
-          credentials: 'same-origin'
-        });
-
-        const text = await res.text();
-        let data = [];
-        try { data = JSON.parse(text); } catch (_) {}
-
-        if (res.status === 401) {
-          showStatus('You must be logged in to view your rankings.', true);
-          rankingListEl.innerHTML = '<div class="empty">Please log in first.</div>';
-          baselineEl.textContent = '0 / 3 complete';
-          return;
+      async function loadRankings() {
+        try {
+          const res = await fetch('api/rankings', {
+            credentials: 'same-origin'
+          });
+          const text = await res.text();
+          let data = [];
+          try {
+            data = JSON.parse(text);
+          } catch (_) {}
+          if (res.status === 401) {
+            showStatus('You must be logged in to view your rankings.', true);
+            rankingListEl.innerHTML = '<div class="empty">Please log in first.</div>';
+            baselineEl.textContent = '0 / 3 complete';
+            return;
+          }
+          if (!res.ok) {
+            showStatus((data && data.error) || 'Failed to load rankings.', true);
+            return;
+          }
+          renderRankings(data);
+        } catch (err) {
+          console.error(err);
+          showStatus('Network error while loading rankings.', true);
         }
-
-        if (!res.ok) {
-          showStatus((data && data.error) || 'Failed to load rankings.', true);
-          return;
-        }
-
-        renderRankings(data);
-      } catch (err) {
-        console.error(err);
-        showStatus('Network error while loading rankings.', true);
       }
-    }
-    restaurantSearchEl.addEventListener('input', () => {
+      restaurantSearchEl.addEventListener('input', () => {
         selectedRestaurantId = null;
-
         clearTimeout(restaurantSearchTimer);
         restaurantSearchTimer = setTimeout(searchRestaurants, 250);
       });
-
       document.addEventListener('click', (event) => {
         if (!restaurantDropdownEl.contains(event.target) && event.target !== restaurantSearchEl) {
           restaurantDropdownEl.classList.add('hidden');
         }
       });
-
       async function searchRestaurants() {
         const query = restaurantSearchEl.value.trim();
-
         if (query.length < 2) {
           restaurantDropdownEl.innerHTML = '';
           restaurantDropdownEl.classList.add('hidden');
           return;
         }
-
         try {
           const res = await fetch('api/restaurants/search?q=' + encodeURIComponent(query) + '&limit=10', {
             credentials: 'same-origin'
           });
-
           const restaurants = await res.json();
-
           if (!res.ok) {
             restaurantDropdownEl.innerHTML = '<div class="dropdown-item">Failed to search restaurants.</div>';
             restaurantDropdownEl.classList.remove('hidden');
             return;
           }
-
           renderRestaurantDropdown(restaurants);
         } catch (err) {
           console.error(err);
@@ -462,52 +453,44 @@ button:disabled {
 
       function renderRestaurantDropdown(restaurants) {
         restaurantDropdownEl.innerHTML = '';
-
         if (!restaurants || restaurants.length === 0) {
           restaurantDropdownEl.innerHTML = '<div class="dropdown-item">No restaurants found.</div>';
           restaurantDropdownEl.classList.remove('hidden');
           return;
         }
-
         restaurants.forEach((restaurant) => {
           const item = document.createElement('div');
           item.className = 'dropdown-item';
-
           item.innerHTML = `
             <div class="dropdown-name">${escapeHtml(restaurant.name)}</div>
             <div class="dropdown-meta">${escapeHtml(restaurant.address || 'No address listed')}</div>
           `;
-
           item.addEventListener('click', () => {
             selectedRestaurantId = restaurant.restaurantId;
             restaurantSearchEl.value = restaurant.name;
             restaurantDropdownEl.classList.add('hidden');
           });
-
           restaurantDropdownEl.appendChild(item);
         });
-
         restaurantDropdownEl.classList.remove('hidden');
       }
-    function renderRankings(rankings) {
-      updateBaselineProgress(rankings);
-      rankPositionEl.value = rankings && rankings.length ? rankings.length + 1 : 1;
-      rankingListEl.innerHTML = '';
 
-      if (!rankings || rankings.length === 0) {
-        rankingListEl.innerHTML = `
+      function renderRankings(rankings) {
+        updateBaselineProgress(rankings);
+        rankPositionEl.value = rankings && rankings.length ? rankings.length + 1 : 1;
+        rankingListEl.innerHTML = '';
+        if (!rankings || rankings.length === 0) {
+          rankingListEl.innerHTML = `
           <div class="empty">
             You have not ranked any restaurants yet.
           </div>
         `;
-        return;
-      }
-
-      rankings.forEach((entry) => {
-        const card = document.createElement('div');
-        card.className = 'ranking-item';
-
-        card.innerHTML = `
+          return;
+        }
+        rankings.forEach((entry) => {
+          const card = document.createElement('div');
+          card.className = 'ranking-item';
+          card.innerHTML = `
           <div class="ranking-top">
             <div>
               <div class="item-title">
@@ -522,180 +505,146 @@ button:disabled {
             </div>
           </div>
         `;
-
-        const actions = document.createElement('div');
-        actions.className = 'actions';
-
-        const topBtn = document.createElement('button');
-        topBtn.className = 'secondary';
-        topBtn.textContent = 'Move to Top';
-        topBtn.disabled = entry.rankPosition <= 1;
-        topBtn.addEventListener('click', () => moveToTop(entry));
-
-        const upBtn = document.createElement('button');
-        upBtn.className = 'secondary';
-        upBtn.textContent = 'Move Up';
-        upBtn.disabled = entry.rankPosition <= 1;
-        upBtn.addEventListener('click', () => updateRanking(entry.restaurantId, entry.rankPosition - 1));
-
-        const downBtn = document.createElement('button');
-        downBtn.className = 'secondary';
-        downBtn.textContent = 'Move Down';
-        downBtn.disabled = entry.rankPosition >= rankings.length;
-        downBtn.addEventListener('click', () => updateRanking(entry.restaurantId, entry.rankPosition + 1));
-
-        const bottomBtn = document.createElement('button');
-        bottomBtn.className = 'secondary';
-        bottomBtn.textContent = 'Move to Bottom';
-        bottomBtn.disabled = entry.rankPosition >= rankings.length;
-        bottomBtn.addEventListener('click', () => moveToBottom(entry, rankings));
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'danger';
-        deleteBtn.textContent = 'Remove';
-        deleteBtn.addEventListener('click', () => deleteRanking(entry.restaurantId));
-
-        actions.appendChild(topBtn);
-        actions.appendChild(upBtn);
-        actions.appendChild(downBtn);
-        actions.appendChild(bottomBtn);
-        actions.appendChild(deleteBtn);
-
-        card.appendChild(actions);
-        rankingListEl.appendChild(card);
-      });
-    }
-
-    async function addRanking() {
+          const actions = document.createElement('div');
+          actions.className = 'actions';
+          const topBtn = document.createElement('button');
+          topBtn.className = 'secondary';
+          topBtn.textContent = 'Move to Top';
+          topBtn.disabled = entry.rankPosition <= 1;
+          topBtn.addEventListener('click', () => updateRanking(entry.restaurantId, 1));
+          const upBtn = document.createElement('button');
+          upBtn.className = 'secondary';
+          upBtn.textContent = 'Move Up';
+          upBtn.disabled = entry.rankPosition <= 1;
+          upBtn.addEventListener('click', () => updateRanking(entry.restaurantId, entry.rankPosition - 1));
+          const downBtn = document.createElement('button');
+          downBtn.className = 'secondary';
+          downBtn.textContent = 'Move Down';
+          downBtn.disabled = entry.rankPosition >= rankings.length;
+          downBtn.addEventListener('click', () => updateRanking(entry.restaurantId, entry.rankPosition + 1));
+          const bottomBtn = document.createElement('button');
+          bottomBtn.className = 'secondary';
+          bottomBtn.textContent = 'Move to Bottom';
+          bottomBtn.disabled = entry.rankPosition >= rankings.length;
+          bottomBtn.addEventListener('click', () => updateRanking(entry.restaurantId, rankings.length));
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'danger';
+          deleteBtn.textContent = 'Remove';
+          deleteBtn.addEventListener('click', () => deleteRanking(entry.restaurantId));
+          actions.appendChild(topBtn);
+          actions.appendChild(upBtn);
+          actions.appendChild(downBtn);
+          actions.appendChild(bottomBtn);
+          actions.appendChild(deleteBtn);
+          card.appendChild(actions);
+          rankingListEl.appendChild(card);
+        });
+      }
+      async function addRanking() {
         const restaurantId = selectedRestaurantId;
         const rankPosition = Number(rankPositionEl.value);
-
         if (!restaurantId) {
           showStatus('Please search and select a restaurant.', true);
           return;
         }
-      if (!rankPosition || rankPosition < 1) {
-        showStatus('Please enter a valid rank position.', true);
-        return;
-      }
-
-      try {
-        const res = await fetch('api/rankings', {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            restaurantId,
-            rankPosition
-          })
-        });
-
-        const text = await res.text();
-        let data = {};
-        try { data = JSON.parse(text); } catch (_) {}
-
-        if (!res.ok) {
-          showStatus(data.error || 'Failed to add ranking.', true);
+        if (!rankPosition || rankPosition < 1) {
+          showStatus('Please enter a valid rank position.', true);
           return;
         }
-
-        restaurantSearchEl.value = '';
-        rankPositionEl.value = '';
-        selectedRestaurantId = null;
-        showStatus('Ranking added successfully.');
-        loadRankings();
-      } catch (err) {
-        console.error(err);
-        showStatus('Network error while adding ranking.', true);
+        try {
+          const res = await fetch('api/rankings', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              restaurantId,
+              rankPosition
+            })
+          });
+          const text = await res.text();
+          let data = {};
+          try {
+            data = JSON.parse(text);
+          } catch (_) {}
+          if (!res.ok) {
+            showStatus(data.error || 'Failed to add ranking.', true);
+            return;
+          }
+          restaurantSearchEl.value = '';
+          rankPositionEl.value = '';
+          selectedRestaurantId = null;
+          showStatus('Ranking added successfully.');
+          loadRankings();
+        } catch (err) {
+          console.error(err);
+          showStatus('Network error while adding ranking.', true);
+        }
       }
-    }
-
-    async function moveToTop(entry) {
-    	  for (let pos = entry.rankPosition - 1; pos >= 1; pos--) {
-    	    const ok = await updateRanking(entry.restaurantId, pos, false);
-    	    if (!ok) return;
-    	  }
-    	  loadRankings();
-    	}
-
-    async function moveToBottom(entry, rankings) {
-    	  for (let pos = entry.rankPosition + 1; pos <= rankings.length; pos++) {
-    	    const ok = await updateRanking(entry.restaurantId, pos, false);
-    	    if (!ok) return;
-    	  }
-    	  loadRankings();
-    	}
-    async function updateRanking(restaurantId, rankPosition, reload = true) {
-      const pos = Number(rankPosition);
-      if (!pos || pos < 1) {
-        showStatus('Rank position must be greater than 0.', true);
-        return;
-      }
-
-      try {
-        const res = await fetch('api/rankings', {
-          method: 'PUT',
-          credentials: 'same-origin',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            restaurantId,
-            rankPosition: pos
-          })
-        });
-
-        const text = await res.text();
-        let data = {};
-        try { data = JSON.parse(text); } catch (_) {}
-
-        if (!res.ok) {
-          showStatus(data.error || 'Failed to update ranking.', true);
+      async function updateRanking(restaurantId, rankPosition) {
+        const pos = Number(rankPosition);
+        if (!pos || pos < 1) {
+          showStatus('Rank position must be greater than 0.', true);
+          return;
+        }
+        try {
+          const res = await fetch('api/rankings', {
+            method: 'PUT',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              restaurantId,
+              rankPosition: pos
+            })
+          });
+          const text = await res.text();
+          let data = {};
+          try {
+            data = JSON.parse(text);
+          } catch (_) {}
+          if (!res.ok) {
+            showStatus(data.error || 'Failed to update ranking.', true);
+            return false;
+          }
+          showStatus('Ranking updated successfully.');
+          loadRankings();
+          return true;
+        } catch (err) {
+          console.error(err);
+          showStatus('Network error while updating ranking.', true);
           return false;
         }
-
-        showStatus('Ranking updated successfully.');
-        loadRankings();
-        return true;
-      } catch (err) {
-        console.error(err);
-        showStatus('Network error while updating ranking.', true);
-        return false;
       }
-    }
-
-    async function deleteRanking(restaurantId) {
-      if (!confirm('Remove this restaurant from your rankings?')) return;
-
-      try {
-        const res = await fetch(`api/rankings?restaurantId=${encodeURIComponent(restaurantId)}`, {
-          method: 'DELETE',
-          credentials: 'same-origin'
-        });
-
-        const text = await res.text();
-        let data = {};
-        try { data = JSON.parse(text); } catch (_) {}
-
-        if (!res.ok) {
-          showStatus(data.error || 'Failed to delete ranking.', true);
-          return;
+      async function deleteRanking(restaurantId) {
+        if (!confirm('Remove this restaurant from your rankings?')) return;
+        try {
+          const res = await fetch(`api/rankings?restaurantId=${encodeURIComponent(restaurantId)}`, {
+            method: 'DELETE',
+            credentials: 'same-origin'
+          });
+          const text = await res.text();
+          let data = {};
+          try {
+            data = JSON.parse(text);
+          } catch (_) {}
+          if (!res.ok) {
+            showStatus(data.error || 'Failed to delete ranking.', true);
+            return;
+          }
+          showStatus('Ranking removed successfully.');
+          loadRankings();
+        } catch (err) {
+          console.error(err);
+          showStatus('Network error while deleting ranking.', true);
         }
-
-        showStatus('Ranking removed successfully.');
-        loadRankings();
-      } catch (err) {
-        console.error(err);
-        showStatus('Network error while deleting ranking.', true);
       }
-    }
+      addBtn.addEventListener('click', addRanking);
+      refreshBtn.addEventListener('click', loadRankings);
+      loadRankings();
+    </script>
+  </body>
 
-    addBtn.addEventListener('click', addRanking);
-    refreshBtn.addEventListener('click', loadRankings);
-
-    loadRankings();
-  </script>
-</body>
 </html>

@@ -205,127 +205,158 @@ public class RankingDAO {
     }
 
     public boolean updateRankingPosition(long userId, long restaurantId, int newPosition) {
-        String findSql = "SELECT rank_position FROM rankings WHERE user_id = ? AND restaurant_id = ?";
-        String moveTargetAwaySql = """
-                UPDATE rankings
-                SET rank_position = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE user_id = ? AND restaurant_id = ?
-                """;
-        String moveUpSql = """
-                UPDATE rankings
-                SET rank_position = rank_position + 1,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE user_id = ? AND rank_position >= ? AND rank_position < ?
-                """;
-        String moveDownSql = """
-                UPDATE rankings
-                SET rank_position = rank_position - 1,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE user_id = ? AND rank_position <= ? AND rank_position > ?
-                """;
-        String moveTargetToFinalSql = """
-                UPDATE rankings
-                SET rank_position = ?, updated_at = CURRENT_TIMESTAMP
+        final int TEMP_OFFSET = 10000;
+
+        String findSql = """
+                SELECT rank_position
+                FROM rankings
                 WHERE user_id = ? AND restaurant_id = ?
                 """;
 
-        Connection conn = null;
+        String countSql = """
+                SELECT COUNT(*)
+                FROM rankings
+                WHERE user_id = ?
+                """;
 
-        try {
-            conn = DBConnectionManager.getConnection();
+        String moveCurrentToTempSql = """
+                UPDATE rankings
+                SET rank_position = -1,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = ? AND restaurant_id = ?
+                """;
+
+        String moveRangeToTempSql = """
+                UPDATE rankings
+                SET rank_position = rank_position + ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = ?
+                  AND rank_position BETWEEN ? AND ?
+                """;
+
+        String shiftRangeDownSql = """
+                UPDATE rankings
+                SET rank_position = rank_position - ? + 1,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = ?
+                  AND rank_position BETWEEN ? AND ?
+                """;
+
+        String shiftRangeUpSql = """
+                UPDATE rankings
+                SET rank_position = rank_position - ? - 1,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = ?
+                  AND rank_position BETWEEN ? AND ?
+                """;
+
+        String moveCurrentToFinalSql = """
+                UPDATE rankings
+                SET rank_position = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = ? AND restaurant_id = ?
+                """;
+
+        try (Connection conn = DBConnectionManager.getConnection()) {
             conn.setAutoCommit(false);
 
-            int oldPosition;
+            try {
+                int oldPosition;
+                int count;
 
-            // Find current position of the target ranking
-            try (PreparedStatement findStmt = conn.prepareStatement(findSql)) {
-                findStmt.setLong(1, userId);
-                findStmt.setLong(2, restaurantId);
+                try (PreparedStatement stmt = conn.prepareStatement(findSql)) {
+                    stmt.setLong(1, userId);
+                    stmt.setLong(2, restaurantId);
 
-                try (ResultSet rs = findStmt.executeQuery()) {
-                    if (!rs.next()) {
-                        conn.rollback();
-                        return false;
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (!rs.next()) {
+                            conn.rollback();
+                            return false;
+                        }
+                        oldPosition = rs.getInt("rank_position");
                     }
-                    oldPosition = rs.getInt("rank_position");
                 }
-            }
 
-            int maxPos = getMaxRankPosition(conn, userId);
+                try (PreparedStatement stmt = conn.prepareStatement(countSql)) {
+                    stmt.setLong(1, userId);
 
-            if (newPosition < 1) {
-                newPosition = 1;
-            }
-            if (newPosition > maxPos) {
-                newPosition = maxPos;
-            }
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        rs.next();
+                        count = rs.getInt(1);
+                    }
+                }
 
-            if (newPosition == oldPosition) {
-                conn.rollback();
+                if (newPosition < 1) {
+                    newPosition = 1;
+                }
+                if (newPosition > count) {
+                    newPosition = count;
+                }
+
+                if (oldPosition == newPosition) {
+                    conn.commit();
+                    return true;
+                }
+
+                try (PreparedStatement stmt = conn.prepareStatement(moveCurrentToTempSql)) {
+                    stmt.setLong(1, userId);
+                    stmt.setLong(2, restaurantId);
+                    stmt.executeUpdate();
+                }
+
+                if (newPosition < oldPosition) {
+                    try (PreparedStatement stmt = conn.prepareStatement(moveRangeToTempSql)) {
+                        stmt.setInt(1, TEMP_OFFSET);
+                        stmt.setLong(2, userId);
+                        stmt.setInt(3, newPosition);
+                        stmt.setInt(4, oldPosition - 1);
+                        stmt.executeUpdate();
+                    }
+
+                    try (PreparedStatement stmt = conn.prepareStatement(shiftRangeDownSql)) {
+                        stmt.setInt(1, TEMP_OFFSET);
+                        stmt.setLong(2, userId);
+                        stmt.setInt(3, newPosition + TEMP_OFFSET);
+                        stmt.setInt(4, oldPosition - 1 + TEMP_OFFSET);
+                        stmt.executeUpdate();
+                    }
+                } else {
+                    try (PreparedStatement stmt = conn.prepareStatement(moveRangeToTempSql)) {
+                        stmt.setInt(1, TEMP_OFFSET);
+                        stmt.setLong(2, userId);
+                        stmt.setInt(3, oldPosition + 1);
+                        stmt.setInt(4, newPosition);
+                        stmt.executeUpdate();
+                    }
+
+                    try (PreparedStatement stmt = conn.prepareStatement(shiftRangeUpSql)) {
+                        stmt.setInt(1, TEMP_OFFSET);
+                        stmt.setLong(2, userId);
+                        stmt.setInt(3, oldPosition + 1 + TEMP_OFFSET);
+                        stmt.setInt(4, newPosition + TEMP_OFFSET);
+                        stmt.executeUpdate();
+                    }
+                }
+
+                try (PreparedStatement stmt = conn.prepareStatement(moveCurrentToFinalSql)) {
+                    stmt.setInt(1, newPosition);
+                    stmt.setLong(2, userId);
+                    stmt.setLong(3, restaurantId);
+                    stmt.executeUpdate();
+                }
+
+                conn.commit();
                 return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+                return false;
+            } finally {
+                conn.setAutoCommit(true);
             }
-
-            // Move target row to a temporary safe position first
-            int tempPosition = maxPos + 1;
-
-            try (PreparedStatement tempStmt = conn.prepareStatement(moveTargetAwaySql)) {
-                tempStmt.setInt(1, tempPosition);
-                tempStmt.setLong(2, userId);
-                tempStmt.setLong(3, restaurantId);
-                tempStmt.executeUpdate();
-            }
-
-            // Shift other rows
-            if (newPosition < oldPosition) {
-                // Example: move from 5 -> 2, shift 2..4 up by 1
-                try (PreparedStatement moveUpStmt = conn.prepareStatement(moveUpSql)) {
-                    moveUpStmt.setLong(1, userId);
-                    moveUpStmt.setInt(2, newPosition);
-                    moveUpStmt.setInt(3, oldPosition);
-                    moveUpStmt.executeUpdate();
-                }
-            } else {
-                // Example: move from 2 -> 5, shift 3..5 down by 1
-                try (PreparedStatement moveDownStmt = conn.prepareStatement(moveDownSql)) {
-                    moveDownStmt.setLong(1, userId);
-                    moveDownStmt.setInt(2, newPosition);
-                    moveDownStmt.setInt(3, oldPosition);
-                    moveDownStmt.executeUpdate();
-                }
-            }
-
-            // Put target row into final position
-            try (PreparedStatement finalStmt = conn.prepareStatement(moveTargetToFinalSql)) {
-                finalStmt.setInt(1, newPosition);
-                finalStmt.setLong(2, userId);
-                finalStmt.setLong(3, restaurantId);
-                finalStmt.executeUpdate();
-            }
-
-            conn.commit();
-            return true;
-
         } catch (SQLException e) {
             e.printStackTrace();
-
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException rollbackEx) {
-                    rollbackEx.printStackTrace();
-                }
-            }
-
             return false;
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                    conn.close();
-                } catch (SQLException closeEx) {
-                    closeEx.printStackTrace();
-                }
-            }
         }
     }
     

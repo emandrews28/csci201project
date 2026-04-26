@@ -1,134 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #f5f5f5;
-      color: #222;
-    }
-    .card {
-      background: white;
-      padding: 32px;
-      border-radius: 12px;
-      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
-      width: min(92vw, 420px);
-    }
-    h1 { margin-top: 0; text-align: center; }
-    label {
-      display: block;
-      margin: 14px 0 6px;
-      font-weight: 600;
-    }
-    input {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 1rem;
-    }
-    .buttons {
-      display: flex;
-      gap: 12px;
-      margin-top: 22px;
-    }
-    button, a.button {
-      flex: 1;
-      border: none;
-      border-radius: 8px;
-      padding: 12px 18px;
-      font-size: 1rem;
-      cursor: pointer;
-      text-decoration: none;
-      text-align: center;
-      display: inline-block;
-    }
-    .login-btn {
-      background: #2563eb;
-      color: white;
-    }
-    .login-btn:hover { background: #1d4ed8; }
-    .register-btn {
-      background: #e5e7eb;
-      color: #111827;
-    }
-    .register-btn:hover { background: #d1d5db; }
-    .form-footer {
-      margin-top: 14px;
-      margin-bottom: 4px;
-      width: 100%;
-      text-align: center;
-    }
-    #error {
-      display: block !important;
-      width: 100% !important;
-      max-width: none !important;
-      color: #b91c1c;
-      font-size: 0.95rem;
-      line-height: 1.35;
-      text-align: center;
-      white-space: nowrap;
-      margin: 0 0 16px 0;
-      padding: 0;
-    }
-    #error:empty {
-      display: none !important;
-    }
-    .hint {
-      display: block !important;
-      width: 100% !important;
-      color: #6b7280;
-      font-size: 0.95rem;
-      line-height: 1.35;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-      white-space: nowrap;
-    }
-  </style>
-</head>
-<body>
-  <main class="card">
-    <h1>Login</h1>
 
-    <form action="login" method="post" id="loginForm">
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username" required autocomplete="username" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5f5f5;
+        color: #222;
+      }
 
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" required autocomplete="current-password" />
+      .card {
+        background: white;
+        padding: 32px;
+        border-radius: 12px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+        width: min(92vw, 420px);
+      }
 
-      <div class="buttons">
-        <button class="login-btn" type="submit">Login</button>
-        <a class="button register-btn" href="register.html">Register</a>
+      h1 {
+        margin-top: 0;
+        text-align: center;
+      }
+
+      label {
+        display: block;
+        margin: 14px 0 6px;
+        font-weight: 600;
+      }
+
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1rem;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 22px;
+      }
+
+      button,
+      a.button {
+        flex: 1;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 18px;
+        font-size: 1rem;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+        display: inline-block;
+      }
+
+      .login-btn {
+        background: #2563eb;
+        color: white;
+      }
+
+      .login-btn:hover {
+        background: #1d4ed8;
+      }
+
+      .register-btn {
+        background: #e5e7eb;
+        color: #111827;
+      }
+
+      .register-btn:hover {
+        background: #d1d5db;
+      }
+
+      .form-footer {
+        margin-top: 14px;
+        margin-bottom: 4px;
+        width: 100%;
+        text-align: center;
+      }
+
+      #error {
+        display: block !important;
+        width: 100% !important;
+        max-width: none !important;
+        color: #b91c1c;
+        font-size: 0.95rem;
+        line-height: 1.35;
+        text-align: center;
+        white-space: nowrap;
+        margin: 0 0 16px 0;
+        padding: 0;
+      }
+
+      #error:empty {
+        display: none !important;
+      }
+
+      .hint {
+        display: block !important;
+        width: 100% !important;
+        color: #6b7280;
+        font-size: 0.95rem;
+        line-height: 1.35;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="card">
+      <h1>Login</h1>
+
+      <form action="login" method="post" id="loginForm">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required autocomplete="username" />
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password" />
+
+        <div class="buttons">
+          <button class="login-btn" type="submit">Login</button>
+          <a class="button register-btn" href="register.html">Register</a>
+        </div>
+      </form>
+
+      <div class="form-footer">
+        <div id="error" class="error"></div>
+        <div class="hint">Username and password are case-sensitive.</div>
       </div>
-    </form>
+    </main>
 
-    <div class="form-footer">
-      <div id="error" class="error"></div>
-      <div class="hint">Username and password are case-sensitive.</div>
-    </div>
-  </main>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const error = params.get('error');
+      const errorEl = document.getElementById('error');
+      if (error === 'invalid') {
+        errorEl.textContent = 'Invalid username or password.';
+      } else if (error === 'server') {
+        errorEl.textContent = 'A server error occurred. Please try again.';
+      }
+    </script>
+  </body>
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const error = params.get('error');
-    const errorEl = document.getElementById('error');
-
-    if (error === 'invalid') {
-      errorEl.textContent = 'Invalid username or password.';
-    } else if (error === 'server') {
-      errorEl.textContent = 'A server error occurred. Please try again.';
-    }
-  </script>
-</body>
 </html>

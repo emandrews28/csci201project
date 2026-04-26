@@ -10,6 +10,9 @@ public class Photo {
     private String imageUrl;
     private String caption;
     private Timestamp createdAt;
+    
+    private String restaurantName;
+    private String username;
 
     public Photo() {}
 
@@ -35,4 +38,9 @@ public class Photo {
     public void setCaption(String caption) { this.caption = caption; }
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    
+    public String getRestaurantName() { return restaurantName; }
+    public void setRestaurantName(String restaurantName) { this.restaurantName = restaurantName; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 }
