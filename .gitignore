@@ -7,6 +7,14 @@ target/
 .classpath
 .settings/
 
+# Local server runtime (created by scripts/run-server.sh)
+scripts/.tomcat/
+scripts/.upload/
+
+# IDE / editor state (per-user)
+.vscode/
+.claude/
+
 # OS
 .DS_Store
 Thumbs.db

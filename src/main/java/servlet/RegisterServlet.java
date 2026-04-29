@@ -46,7 +46,7 @@ public class RegisterServlet extends HttpServlet {
             session.setAttribute("username", createdUser.getUsername());
             session.setAttribute("email", createdUser.getEmail());
 
-            response.sendRedirect(request.getContextPath() + HOME_PAGE);
+            response.sendRedirect(request.getContextPath() + HOME_PAGE + "?status=registered");
 
         } catch (IllegalArgumentException e) {
             // Handles username taken, email taken, invalid input, weak password, etc.

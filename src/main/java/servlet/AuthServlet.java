@@ -81,7 +81,7 @@ public class AuthServlet extends HttpServlet {
         session.setAttribute("username", user.getUsername());
         session.setAttribute("email", user.getEmail());
 
-        response.sendRedirect(request.getContextPath() + HOME_PAGE);
+        response.sendRedirect(request.getContextPath() + HOME_PAGE + "?status=logged_in");
     }
 
     private void handleLogout(HttpServletRequest request, HttpServletResponse response)

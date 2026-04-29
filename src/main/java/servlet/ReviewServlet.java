@@ -109,4 +109,39 @@ public class ReviewServlet extends HttpServlet {
             out.print("{\"error\":\"Review not found\"}");
         }
     }
+    
+    // DELETE - delete a review
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        response.setContentType("application/json");
+        PrintWriter out = response.getWriter();
+
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            out.print("{\"error\":\"Not logged in\"}");
+            return;
+        }
+
+        String restaurantIdStr = request.getParameter("restaurantId");
+        if (restaurantIdStr == null) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.print("{\"error\":\"restaurantId required\"}");
+            return;
+        }
+
+        long userId = (long) session.getAttribute("userId");
+        long restaurantId = Long.parseLong(restaurantIdStr);
+
+        boolean deleted = reviewDAO.deleteReview(userId, restaurantId);
+
+        if (deleted) {
+            out.print("{\"message\":\"Review deleted\"}");
+        } else {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            out.print("{\"error\":\"Review not found\"}");
+        }
+    }
 }

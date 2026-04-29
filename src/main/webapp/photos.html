@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Photos</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        min-height: 100vh;
+        background: #f5f5f5;
+        color: #1f2937;
+      }
+
+      header {
+        background: #2563eb;
+        color: white;
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 1.2rem;
+        line-height: 1.2;
+      }
+
+      header nav {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      header a {
+        color: white;
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 600;
+        opacity: 0.95;
+      }
+
+      header a:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
+      main {
+        max-width: 960px;
+        margin: 24px auto;
+        padding: 0 16px;
+        display: grid;
+        gap: 24px;
+      }
+
+      .card {
+        background: white;
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+      }
+
+      .card h2 {
+        margin-top: 0;
+        font-size: 1.05rem;
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+
+      .section-header h2 {
+        margin: 0;
+      }
+
+      label {
+        display: block;
+        margin: 10px 0 4px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #333;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 0.95rem;
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 60px;
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+
+      .file-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+        margin-bottom: 8px;
+      }
+
+      .file-label {
+        margin: 0;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: #e5e7eb;
+        color: #111827;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        box-sizing: border-box;
+      }
+
+      .file-label:hover {
+        background: #d1d5db;
+      }
+
+      .file-name {
+        color: #6b7280;
+        font-size: 0.92rem;
+        line-height: 40px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      button {
+        border: none;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 0.92rem;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: #2563eb;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #1d4ed8;
+      }
+
+      .btn-danger {
+        background: #d93b3b;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background: #bf2e2e;
+      }
+
+      .btn-secondary {
+        background: #e5e7eb;
+        color: #111827;
+      }
+
+      .btn-secondary:hover {
+        background: #d1d5db;
+      }
+
+      .preview {
+        margin-top: 12px;
+        max-width: 100%;
+        max-height: 280px;
+        border-radius: 8px;
+        display: none;
+      }
+
+      .status {
+        margin-top: 8px;
+        font-size: 0.9rem;
+        min-height: 0;
+      }
+
+      .status:empty {
+        display: none;
+      }
+
+      .status.success {
+        color: #0a7a2f;
+      }
+
+      .status.error {
+        color: #b91c1c;
+      }
+
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .gallery figure {
+        margin: 0;
+        background: #fafafa;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .gallery img {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        cursor: pointer;
+        background: #f0f0f0;
+      }
+
+      .gallery figcaption {
+        padding: 8px;
+        font-size: 0.85rem;
+        color: #333;
+        word-break: break-word;
+      }
+
+      .gallery .row {
+        display: flex;
+        gap: 6px;
+        padding: 0 8px 8px;
+      }
+
+      .gallery .row button {
+        flex: 1;
+        padding: 6px 8px;
+        font-size: 0.8rem;
+      }
+
+      .empty {
+        color: #6b7280;
+        font-size: 0.9rem;
+        padding: 8px 0;
+      }
+
+      .lookup-row {
+        display: flex;
+        gap: 10px;
+        align-items: end;
+      }
+
+      .lookup-row>div {
+        flex: 1;
+      }
+
+      .restaurant-search-wrap {
+        position: relative;
+      }
+
+      .dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        margin-top: 6px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: white;
+        max-height: 220px;
+        overflow-y: auto;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        z-index: 20;
+      }
+
+      .dropdown-item {
+        padding: 10px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #f3f4f6;
+      }
+
+      .dropdown-item:last-child {
+        border-bottom: none;
+      }
+
+      .dropdown-item:hover {
+        background: #f3f4f6;
+      }
+
+      .dropdown-name {
+        font-weight: 700;
+      }
+
+      .dropdown-meta {
+        color: #6b7280;
+        font-size: 0.85rem;
+        margin-top: 2px;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .modal img {
+        max-width: 90vw;
+        max-height: 90vh;
+        border-radius: 12px;
+      }
+
+      .modal.open {
+        display: flex;
+      }
+
+      #myPhotosStatus:empty {
+        display: none;
+      }
+
+      @media (max-width: 720px) {
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        header nav {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>Restaurant Photos</h1>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="map.html">Map</a>
+        <a href="rankings.html">Rankings</a>
+        <a href="wishlist.html">Wishlist</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Upload a Photo</h2>
+        <form id="uploadForm">
+          <label for="restaurantSearch">Restaurant</label>
+          <div class="restaurant-search-wrap">
+            <input type="text" id="restaurantSearch" placeholder="Search restaurant name..." autocomplete="off" required />
+            <div id="restaurantDropdown" class="dropdown hidden"></div>
+          </div>
+
+          <label for="reviewId">Review ID (optional)</label>
+          <input type="number" id="reviewId" name="reviewId" min="1" />
+
+          <label for="caption">Caption</label>
+          <textarea id="caption" name="caption" placeholder="Describe the photo"></textarea>
+
+          <label for="image">Image (JPEG, PNG, or HEIC — max 5 MB)</label>
+          <div class="file-row">
+            <label class="file-label" for="image">Choose File</label>
+            <span id="fileName" class="file-name">No file chosen</span>
+            <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/heic,image/heif" required />
+          </div>
+
+          <img id="preview" class="preview" alt="Preview" />
+
+          <div class="actions">
+            <button type="submit" class="btn-primary" id="uploadBtn">Upload</button>
+            <button type="button" class="btn-secondary" id="clearBtn">Clear</button>
+          </div>
+          <div id="uploadStatus" class="status"></div>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Restaurant Gallery</h2>
+        <div class="lookup-row">
+          <div class="restaurant-search-wrap">
+            <label for="restaurantLookupSearch">Restaurant</label>
+            <input type="text" id="restaurantLookupSearch" placeholder="Search restaurant name..." autocomplete="off" />
+            <div id="restaurantLookupDropdown" class="dropdown hidden"></div>
+          </div>
+          <button type="button" class="btn-primary" id="loadRestaurantBtn">Load</button>
+        </div>
+        <div id="restaurantGallery" class="gallery"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <h2>My Photos</h2>
+          <button type="button" class="btn-primary" id="loadUserBtn">Refresh</button>
+        </div>
+        <p id="myPhotosStatus" class="empty">Loading your photos…</p>
+        <div id="userGallery" class="gallery"></div>
+      </section>
+    </main>
+
+    <div id="modal" class="modal" onclick="this.classList.remove('open')">
+      <img id="modalImg" alt="" />
+    </div>
+
+    <script>
+      const MAX_BYTES = 5 * 1024 * 1024;
+      const ALLOWED = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
+      const fileInput = document.getElementById('image');
+      const preview = document.getElementById('preview');
+      const fileName = document.getElementById('fileName');
+      const uploadForm = document.getElementById('uploadForm');
+      const uploadStatus = document.getElementById('uploadStatus');
+      const uploadBtn = document.getElementById('uploadBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const restaurantSearch = document.getElementById('restaurantSearch');
+      const restaurantDropdown = document.getElementById('restaurantDropdown');
+      const restaurantLookupSearch = document.getElementById('restaurantLookupSearch');
+      const restaurantLookupDropdown = document.getElementById('restaurantLookupDropdown');
+      const myPhotosStatus = document.getElementById('myPhotosStatus');
+      let selectedRestaurantId = null;
+      let selectedRestaurantName = '';
+      let selectedLookupRestaurantId = null;
+      let currentUserId = null;
+      let restaurantSearchTimer = null;
+      let restaurantLookupTimer = null;
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (!file) {
+          fileName.textContent = 'No file chosen';
+          preview.style.display = 'none';
+          return;
+        }
+        fileName.textContent = file.name;
+        if (file.size > MAX_BYTES) {
+          setStatus(uploadStatus, 'File exceeds 5 MB limit.', 'error');
+          fileInput.value = '';
+          preview.style.display = 'none';
+          return;
+        }
+        const typeOk = ALLOWED.includes(file.type) || /\.(jpe?g|png|heic|heif)$/i.test(file.name);
+        if (!typeOk) {
+          setStatus(uploadStatus, 'Only JPEG, PNG, or HEIC files are accepted.', 'error');
+          fileInput.value = '';
+          preview.style.display = 'none';
+          return;
+        }
+        if (file.type && file.type.startsWith('image/') && !file.type.includes('heic') && !file.type.includes('heif')) {
+          preview.src = URL.createObjectURL(file);
+          preview.style.display = 'block';
+        } else {
+          preview.style.display = 'none';
+        }
+        setStatus(uploadStatus, '', '');
+      });
+      restaurantSearch.addEventListener('input', () => {
+        selectedRestaurantId = null;
+        selectedRestaurantName = '';
+        clearTimeout(restaurantSearchTimer);
+        restaurantSearchTimer = setTimeout(() => {
+          searchRestaurants(restaurantSearch.value, restaurantDropdown, (restaurant) => {
+            selectedRestaurantId = restaurant.restaurantId;
+            selectedRestaurantName = restaurant.name;
+            restaurantSearch.value = restaurant.name;
+            restaurantDropdown.classList.add('hidden');
+          });
+        }, 250);
+      });
+      restaurantLookupSearch.addEventListener('input', () => {
+        selectedLookupRestaurantId = null;
+        clearTimeout(restaurantLookupTimer);
+        restaurantLookupTimer = setTimeout(() => {
+          searchRestaurants(restaurantLookupSearch.value, restaurantLookupDropdown, (restaurant) => {
+            selectedLookupRestaurantId = restaurant.restaurantId;
+            restaurantLookupSearch.value = restaurant.name;
+            restaurantLookupDropdown.classList.add('hidden');
+            loadGallery('restaurantId', selectedLookupRestaurantId, 'restaurantGallery');
+          });
+        }, 250);
+      });
+      document.addEventListener('click', (event) => {
+        if (!restaurantDropdown.contains(event.target) && event.target !== restaurantSearch) {
+          restaurantDropdown.classList.add('hidden');
+        }
+        if (!restaurantLookupDropdown.contains(event.target) && event.target !== restaurantLookupSearch) {
+          restaurantLookupDropdown.classList.add('hidden');
+        }
+      });
+      clearBtn.addEventListener('click', () => {
+        uploadForm.reset();
+        selectedRestaurantId = null;
+        selectedRestaurantName = '';
+        fileName.textContent = 'No file chosen';
+        preview.style.display = 'none';
+        setStatus(uploadStatus, '', '');
+      });
+      uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        setStatus(uploadStatus, '', '');
+        const restaurantId = selectedRestaurantId;
+        const reviewId = document.getElementById('reviewId').value.trim();
+        const caption = document.getElementById('caption').value;
+        const file = fileInput.files[0];
+        if (!restaurantId || !file) {
+          setStatus(uploadStatus, 'Please select a restaurant and choose an image.', 'error');
+          return;
+        }
+        if (file.size > MAX_BYTES) {
+          setStatus(uploadStatus, 'File exceeds 5 MB limit.', 'error');
+          return;
+        }
+        const url = new URL('api/photos', window.location.href);
+        url.searchParams.set('restaurantId', restaurantId);
+        if (reviewId) url.searchParams.set('reviewId', reviewId);
+        if (caption) url.searchParams.set('caption', caption);
+        const formData = new FormData();
+        formData.append('image', file);
+        uploadBtn.disabled = true;
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+          });
+          const text = await res.text();
+          let data = {};
+          try {
+            data = JSON.parse(text);
+          } catch (_) {}
+          if (!res.ok) {
+            setStatus(uploadStatus, data.error || ('Upload failed (' + res.status + ')'), 'error');
+            return;
+          }
+          setStatus(uploadStatus, 'Uploaded. Photo ID ' + data.photoId, 'success');
+          uploadForm.reset();
+          preview.style.display = 'none';
+          selectedLookupRestaurantId = restaurantId;
+          restaurantLookupSearch.value = selectedRestaurantName;
+          selectedRestaurantId = null;
+          selectedRestaurantName = '';
+          loadGallery('restaurantId', restaurantId, 'restaurantGallery');
+          loadMyPhotos();
+        } catch (err) {
+          console.error(err);
+          setStatus(uploadStatus, 'Network error.', 'error');
+        } finally {
+          uploadBtn.disabled = false;
+        }
+      });
+      document.getElementById('loadRestaurantBtn').addEventListener('click', () => {
+        if (!selectedLookupRestaurantId) {
+          return;
+        }
+        loadGallery('restaurantId', selectedLookupRestaurantId, 'restaurantGallery');
+      });
+      document.getElementById('loadUserBtn').addEventListener('click', loadMyPhotos);
+      async function loadSession() {
+        try {
+          const res = await fetch('api/session', {
+            credentials: 'include'
+          });
+          if (res.status === 401) {
+            currentUserId = null;
+            myPhotosStatus.textContent = 'Log in to view your photos.';
+            return;
+          }
+          if (!res.ok) {
+            myPhotosStatus.textContent = 'Failed to check login status.';
+            return;
+          }
+          const data = await res.json();
+          currentUserId = data.userId || null;
+          if (currentUserId) {
+            loadMyPhotos();
+          } else {
+            myPhotosStatus.textContent = 'Log in to view your photos.';
+          }
+        } catch (err) {
+          console.error(err);
+          myPhotosStatus.textContent = 'Network error checking login status.';
+        }
+      }
+      async function loadMyPhotos() {
+        if (!currentUserId) {
+          myPhotosStatus.textContent = 'Log in to view your photos.';
+          document.getElementById('userGallery').innerHTML = '';
+          return;
+        }
+        myPhotosStatus.textContent = '';
+        loadGallery('userId', currentUserId, 'userGallery');
+      }
+      async function searchRestaurants(query, dropdown, onSelect) {
+        const trimmed = query.trim();
+        if (trimmed.length < 2) {
+          dropdown.innerHTML = '';
+          dropdown.classList.add('hidden');
+          return;
+        }
+        try {
+          const res = await fetch('api/restaurants/search?q=' + encodeURIComponent(trimmed) + '&limit=10', {
+            credentials: 'include'
+          });
+          if (!res.ok) {
+            dropdown.innerHTML = '<div class="dropdown-item">Failed to search restaurants.</div>';
+            dropdown.classList.remove('hidden');
+            return;
+          }
+          const restaurants = await res.json();
+          renderRestaurantDropdown(restaurants, dropdown, onSelect);
+        } catch (err) {
+          console.error(err);
+          dropdown.innerHTML = '<div class="dropdown-item">Network error.</div>';
+          dropdown.classList.remove('hidden');
+        }
+      }
+
+      function renderRestaurantDropdown(restaurants, dropdown, onSelect) {
+        dropdown.innerHTML = '';
+        if (!restaurants || restaurants.length === 0) {
+          dropdown.innerHTML = '<div class="dropdown-item">No restaurants found.</div>';
+          dropdown.classList.remove('hidden');
+          return;
+        }
+        restaurants.forEach((restaurant) => {
+          const item = document.createElement('div');
+          item.className = 'dropdown-item';
+          item.innerHTML = `
+              <div class="dropdown-name">${escapeHtml(restaurant.name)}</div>
+              <div class="dropdown-meta">${escapeHtml(restaurant.address || 'No address listed')}</div>
+            `;
+          item.addEventListener('click', () => onSelect(restaurant));
+          dropdown.appendChild(item);
+        });
+        dropdown.classList.remove('hidden');
+      }
+      async function loadGallery(paramName, paramValue, containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '<p class="empty">Loading…</p>';
+        try {
+          const res = await fetch('api/photos?' + paramName + '=' + encodeURIComponent(paramValue), {
+            credentials: 'include'
+          });
+          if (!res.ok) {
+            container.innerHTML = '<p class="empty">Failed to load photos.</p>';
+            return;
+          }
+          const photos = await res.json();
+          renderGallery(container, photos);
+        } catch (err) {
+          console.error(err);
+          container.innerHTML = '<p class="empty">Network error.</p>';
+        }
+      }
+
+      function renderGallery(container, photos) {
+        container.innerHTML = '';
+        if (!photos || photos.length === 0) {
+          container.innerHTML = '<p class="empty">No photos yet.</p>';
+          return;
+        }
+        for (const p of photos) {
+          const fig = document.createElement('figure');
+          const img = document.createElement('img');
+          img.src = p.imageUrl;
+          img.alt = p.caption || ('Photo ' + p.photoId);
+          img.loading = 'lazy';
+          img.addEventListener('click', () => openModal(p.imageUrl));
+          fig.appendChild(img);
+          const cap = document.createElement('figcaption');
+          cap.innerHTML = buildPhotoCaption(p, container.id);
+          fig.appendChild(cap);
+          if (container.id === 'userGallery') {
+            const row = document.createElement('div');
+            row.className = 'row';
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn-secondary';
+            editBtn.textContent = 'Edit';
+            editBtn.addEventListener('click', () => editCaption(p, container));
+            row.appendChild(editBtn);
+            const delBtn = document.createElement('button');
+            delBtn.className = 'btn-danger';
+            delBtn.textContent = 'Delete';
+            delBtn.addEventListener('click', () => deletePhoto(p, container));
+            row.appendChild(delBtn);
+            fig.appendChild(row);
+          }
+          container.appendChild(fig);
+        }
+      }
+
+      function buildPhotoCaption(photo, containerId) {
+        const lines = [];
+        if (containerId === 'userGallery' && photo.restaurantName) {
+          lines.push('<strong>' + escapeHtml(photo.restaurantName) + '</strong>');
+        }
+        if (containerId === 'restaurantGallery') {
+          if (photo.username) {
+            lines.push('<strong>' + escapeHtml(photo.username) + '</strong>');
+          } else if (photo.userId) {
+            lines.push('<strong>User ' + escapeHtml(photo.userId) + '</strong>');
+          }
+        }
+        lines.push(escapeHtml(photo.caption ? photo.caption : '(no caption)'));
+        return lines.join('<br/>');
+      }
+      async function editCaption(photo, container) {
+        const next = prompt('New caption:', photo.caption || '');
+        if (next === null) return;
+        try {
+          const res = await fetch('api/photos', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              photoId: photo.photoId,
+              caption: next
+            })
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            alert(data.error || ('Update failed (' + res.status + ')'));
+            return;
+          }
+          reloadContainer(container);
+        } catch (err) {
+          console.error(err);
+          alert('Network error.');
+        }
+      }
+      async function deletePhoto(photo, container) {
+        if (!confirm('Delete this photo?')) return;
+        try {
+          const res = await fetch('api/photos?photoId=' + photo.photoId, {
+            method: 'DELETE',
+            credentials: 'include'
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            alert(data.error || ('Delete failed (' + res.status + ')'));
+            return;
+          }
+          reloadContainer(container);
+        } catch (err) {
+          console.error(err);
+          alert('Network error.');
+        }
+      }
+
+      function reloadContainer(container) {
+        if (container.id === 'restaurantGallery' && selectedLookupRestaurantId) {
+          loadGallery('restaurantId', selectedLookupRestaurantId, 'restaurantGallery');
+        } else if (container.id === 'userGallery' && currentUserId) {
+          loadGallery('userId', currentUserId, 'userGallery');
+        }
+      }
+
+      function setStatus(el, text, cls) {
+        el.textContent = text;
+        el.className = 'status' + (cls ? ' ' + cls : '');
+      }
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, (ch) => {
+          switch (ch) {
+            case '&':
+              return '&amp;';
+            case '<':
+              return '&lt;';
+            case '>':
+              return '&gt;';
+            case '"':
+              return '&quot;';
+            case "'":
+              return '&#39;';
+            default:
+              return ch;
+          }
+        });
+      }
+
+      function openModal(src) {
+        const modal = document.getElementById('modal');
+        document.getElementById('modalImg').src = src;
+        modal.classList.add('open');
+      }
+      loadSession();
+    </script>
+  </body>
+
+</html>

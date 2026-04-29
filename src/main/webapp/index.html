@@ -135,7 +135,6 @@
 <body>
   <main class="card">
     <h1>Home</h1>
-
     <p id="message" class="message"></p>
 
     <div class="button-row">
@@ -155,6 +154,8 @@
 
   <script>
     async function checkSession() {
+      const params = new URLSearchParams(window.location.search);
+      const status = params.get('status');
       const messageEl = document.getElementById('message');
       const logoutForm = document.getElementById('logoutForm');
       const authButton = document.getElementById('authButton');
@@ -166,6 +167,7 @@
 
         if (res.status === 401) {
           messageEl.textContent = 'You are not logged in.';
+          messageEl.classList.remove('success');
           messageEl.classList.add('error');
 
           logoutForm.action = 'login.html';
@@ -181,16 +183,25 @@
 
         if (!data.loggedIn) {
           messageEl.textContent = 'You are not logged in.';
+          messageEl.classList.remove('success');
           messageEl.classList.add('error');
           return;
         }
 
-        messageEl.textContent = 'You are logged in.';
+        if (status === 'logged_in') {
+          messageEl.textContent = 'Successfully logged in.';
+        } else if (status === 'registered') {
+          messageEl.textContent = 'Successfully registered.';
+        } else {
+          messageEl.textContent = 'You are logged in.';
+        }
+
+        messageEl.classList.remove('error');
         messageEl.classList.add('success');
 
       } catch (err) {
         console.error(err);
-        messageEl.textContent = 'Error checking session.';
+        messageEl.textContent = 'Unable to check login status.';
         messageEl.classList.add('error');
       }
     }
