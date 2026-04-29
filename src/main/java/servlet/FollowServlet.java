@@ -3,6 +3,7 @@ package servlet;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import dao.FollowDAO;
+import dao.UserDAO;
 import model.User;
 
 import jakarta.servlet.annotation.WebServlet;
@@ -20,6 +21,7 @@ public class FollowServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
     private final FollowDAO followDAO = new FollowDAO();
+    private final UserDAO userDAO = new UserDAO();
     private final Gson gson = new Gson();
 
     // GET /api/follow/following?userId=X  → list of users X follows
@@ -62,6 +64,16 @@ public class FollowServlet extends HttpServlet {
                 JsonObject result = new JsonObject();
                 result.addProperty("isFollowing", isFollowing);
                 out.print(gson.toJson(result));
+
+            } else if ("/search".equals(path)) {
+                // Search users by username partial match — used by the friends page search bar
+                String q = req.getParameter("q");
+                if (q == null || q.isBlank()) {
+                    out.print("[]");
+                    return;
+                }
+                List<User> results = userDAO.searchByUsername(q);
+                out.print(gson.toJson(results));
 
             } else {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);

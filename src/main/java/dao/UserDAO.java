@@ -7,6 +7,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserDAO {
 
@@ -215,5 +217,38 @@ public class UserDAO {
             e.printStackTrace();
             return false;
         }
+    }
+
+    // Returns users whose username contains the search query (case-insensitive), capped at 10 results
+    public List<User> searchByUsername(String query) {
+        String sql = """
+                SELECT user_id, username, email, created_at
+                FROM users
+                WHERE username ILIKE ?
+                LIMIT 10
+                """;
+
+        List<User> results = new ArrayList<>();
+
+        try (Connection conn = DBConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, "%" + query + "%");
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    User user = new User();
+                    user.setUserId(rs.getLong("user_id"));
+                    user.setUsername(rs.getString("username"));
+                    user.setEmail(rs.getString("email"));
+                    user.setCreatedAt(rs.getTimestamp("created_at"));
+                    results.add(user);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return results;
     }
 }
