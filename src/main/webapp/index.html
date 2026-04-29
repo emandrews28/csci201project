@@ -1,193 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Home</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home</title>
 
-  <style>
-    body {
-      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #f5f5f5;
-      color: #222;
-    }
+    <style>
+      body {
+        font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5f5f5;
+        color: #222;
+      }
 
-    .card {
-      background: white;
-      padding: 32px;
-      border-radius: 14px;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-      width: min(92vw, 520px);
-      text-align: center;
-    }
+      .card {
+        background: white;
+        padding: 32px;
+        border-radius: 14px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+        width: min(92vw, 520px);
+        text-align: center;
+      }
 
-    .message {
-      font-size: 1.2rem;
-      margin: 0 0 24px;
-      min-height: 1.5em;
-    }
+      .message {
+        font-size: 1.2rem;
+        margin: 0 0 24px;
+        min-height: 1.5em;
+      }
 
-    .success {
-      color: #0a7a2f;
-      font-weight: 700;
-    }
+      .success {
+        color: #0a7a2f;
+        font-weight: 700;
+      }
 
-    .error {
-      color: #991b1b;
-      font-weight: 700;
-    }
+      .error {
+        color: #991b1b;
+        font-weight: 700;
+      }
 
-    .button-row {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
+      .button-row {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
 
-    .button-row form {
-      margin: 0;
-      display: inline-block;
-    }
+      .button-row form {
+        margin: 0;
+        display: inline-block;
+      }
 
-    button,
-    a.button {
-      border: none;
-      border-radius: 8px;
-      padding: 12px 18px;
-      font-size: 1rem;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 46px;
-      box-sizing: border-box;
-    }
+      button,
+      a.button {
+        border: none;
+        border-radius: 8px;
+        padding: 12px 18px;
+        font-size: 1rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        box-sizing: border-box;
+      }
 
-    .logout-btn {
-      background: #d93b3b;
-      color: white;
-    }
+      .logout-btn {
+        background: #d93b3b;
+        color: white;
+      }
 
-    .logout-btn:hover {
-      background: #bf2e2e;
-    }
+      .logout-btn:hover {
+        background: #bf2e2e;
+      }
 
-    .login-btn {
-      background: #374151;
-      color: white;
-    }
+      .login-btn {
+        background: #374151;
+        color: white;
+      }
 
-    .login-btn:hover {
-      background: #1f2937;
-    }
+      .login-btn:hover {
+        background: #1f2937;
+      }
 
-    .photos-btn {
-      background: #2563eb;
-      color: white;
-    }
+      .photos-btn {
+        background: #2563eb;
+        color: white;
+      }
 
-    .photos-btn:hover {
-      background: #1d4ed8;
-    }
+      .photos-btn:hover {
+        background: #1d4ed8;
+      }
 
-    .wishlist-btn {
-      background: #f59e0b;
-      color: white;
-    }
+      .wishlist-btn {
+        background: #f59e0b;
+        color: white;
+      }
 
-    .wishlist-btn:hover {
-      background: #d97706;
-    }
+      .wishlist-btn:hover {
+        background: #d97706;
+      }
 
-    .map-btn {
-      background: #0f766e;
-      color: white;
-    }
+      .map-btn {
+        background: #0f766e;
+        color: white;
+      }
 
-    .map-btn:hover {
-      background: #0d5f58;
-    }
+      .map-btn:hover {
+        background: #0d5f58;
+      }
 
-    .rankings-btn {
-      background: #7c3aed;
-      color: white;
-    }
+      .rankings-btn {
+        background: #7c3aed;
+        color: white;
+      }
 
-    .rankings-btn:hover {
-      background: #6d28d9;
-    }
+      .rankings-btn:hover {
+        background: #6d28d9;
+      }
 
-    .small {
-      margin-top: 18px;
-      color: #666;
-      font-size: 0.95rem;
-    }
-  </style>
-</head>
+      .reviews-btn {
+        background: #db2777;
+        color: white;
+      }
 
-<body>
-  <main class="card">
-    <h1>Home</h1>
-    <p id="message" class="message"></p>
+      .reviews-btn:hover {
+        background: #be185d;
+      }
 
-    <div class="button-row">
-      <a class="button map-btn" href="map.html">Map</a>
-      <a class="button rankings-btn" href="rankings.html">Rankings</a>
-      <a class="button wishlist-btn" href="wishlist.html">Wishlist</a>
-      <a class="button photos-btn" href="photos.html">Photos</a>
-      <a class="button photos-btn" href="reviews.html">Reviews</a>
+      .small {
+        margin-top: 18px;
+        color: #666;
+        font-size: 0.95rem;
+      }
+    </style>
+  </head>
 
-      <form id="logoutForm" action="logout" method="post">
-        <button id="authButton" class="logout-btn" type="submit">Logout</button>
-      </form>
-    </div>
+  <body>
+    <main class="card">
+      <h1>Home</h1>
+      <p id="message" class="message"></p>
 
-    <p class="small">This page is only for testing login and registration flow.</p>
-  </main>
+      <div class="button-row">
+        <a class="button map-btn" href="map.html">Map</a>
+        <a class="button rankings-btn" href="rankings.html">Rankings</a>
+        <a class="button wishlist-btn" href="wishlist.html">Wishlist</a>
+        <a class="button photos-btn" href="photos.html">Photos</a>
+        <a class="button reviews-btn" href="reviews.html">Reviews</a>
 
-  <script>
-    async function checkSession() {
-      const params = new URLSearchParams(window.location.search);
-      const status = params.get('status');
-      const messageEl = document.getElementById('message');
-      const logoutForm = document.getElementById('logoutForm');
-      const authButton = document.getElementById('authButton');
+        <span id="authArea">
+          <form id="logoutForm" action="logout" method="post">
+            <button id="authButton" class="logout-btn" type="submit">Logout</button>
+          </form>
+        </span>
+      </div>
 
-      try {
-        const res = await fetch('api/session', {
-          credentials: 'same-origin'
-        });
+      <p class="small">This page is only for testing login and registration flow.</p>
+    </main>
 
-        if (res.status === 401) {
-          messageEl.textContent = 'You are not logged in.';
+    <script>
+      async function checkSession() {
+        const params = new URLSearchParams(window.location.search);
+        const status = params.get('status');
+        const messageEl = document.getElementById('message');
+        const authArea = document.getElementById('authArea');
+        try {
+          const res = await fetch('api/session', {
+            credentials: 'same-origin'
+          });
+          if (res.status === 401) {
+            showLoggedOut(messageEl, authArea);
+            return;
+          }
+          const data = await res.json();
+          if (!data.loggedIn) {
+            showLoggedOut(messageEl, authArea);
+            return;
+          }
+          showLoggedIn(messageEl, status);
+        } catch (err) {
+          console.error(err);
+          messageEl.textContent = 'Unable to check login status.';
           messageEl.classList.remove('success');
           messageEl.classList.add('error');
-
-          logoutForm.action = 'login.html';
-          logoutForm.method = 'get';
-
-          authButton.textContent = 'Login';
-          authButton.classList.remove('logout-btn');
-          authButton.classList.add('login-btn');
-          return;
+          authArea.innerHTML = '<a class="button login-btn" href="login.html">Login</a>';
         }
+      }
 
-        const data = await res.json();
+      function showLoggedOut(messageEl, authArea) {
+        messageEl.textContent = 'You are not logged in.';
+        messageEl.classList.remove('success');
+        messageEl.classList.add('error');
+        authArea.innerHTML = '<a class="button login-btn" href="login.html">Login</a>';
+      }
 
-        if (!data.loggedIn) {
-          messageEl.textContent = 'You are not logged in.';
-          messageEl.classList.remove('success');
-          messageEl.classList.add('error');
-          return;
-        }
-
+      function showLoggedIn(messageEl, status) {
         if (status === 'logged_in') {
           messageEl.textContent = 'Successfully logged in.';
         } else if (status === 'registered') {
@@ -195,34 +207,26 @@
         } else {
           messageEl.textContent = 'You are logged in.';
         }
-
         messageEl.classList.remove('error');
         messageEl.classList.add('success');
-
-      } catch (err) {
-        console.error(err);
-        messageEl.textContent = 'Unable to check login status.';
-        messageEl.classList.add('error');
       }
-    }
-
-    document.getElementById('logoutForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      try {
-        await fetch('logout', {
-          method: 'POST',
-          credentials: 'same-origin'
-        });
-
-        location.reload();
-      } catch (err) {
-        console.error(err);
-      }
-    });
-
-    checkSession();
-  </script>
-</body>
+      document.addEventListener('submit', async (e) => {
+        if (e.target.id !== 'logoutForm') {
+          return;
+        }
+        e.preventDefault();
+        try {
+          await fetch('logout', {
+            method: 'POST',
+            credentials: 'same-origin'
+          });
+          window.location.href = 'login.html';
+        } catch (err) {
+          console.error(err);
+        }
+      });
+      checkSession();
+    </script>
+  </body>
 
 </html>
