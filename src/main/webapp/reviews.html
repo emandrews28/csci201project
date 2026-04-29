@@ -1,79 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Restaurant Reviews</title>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reviews</title>
   <style>
+    :root {
+      color-scheme: light;
+    }
+
     body {
       margin: 0;
-      font-family: "Segoe UI", Roboto, Arial;
+      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background: #f5f5f5;
       color: #1f2937;
     }
 
     header {
-      background: #2563eb;
+      background: #db2777;
       color: white;
       padding: 16px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 16px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      line-height: 1.2;
+    }
+
+    header nav {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     header a {
       color: white;
       text-decoration: none;
-      margin-right: 12px;
+      font-size: 0.95rem;
       font-weight: 600;
+      opacity: 0.95;
+    }
+
+    header a:hover {
+      opacity: 1;
+      text-decoration: underline;
     }
 
     main {
-      max-width: 900px;
+      max-width: 960px;
       margin: 24px auto;
-      padding: 16px;
+      padding: 0 16px;
     }
 
     .card {
       background: white;
+      border-radius: 14px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
       padding: 18px;
-      border-radius: 12px;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 1.1rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-top: 12px;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
     }
 
     input, textarea {
       width: 100%;
+      box-sizing: border-box;
       padding: 10px;
-      margin-top: 6px;
-      border-radius: 8px;
       border: 1px solid #ccc;
-    }
-
-    button {
-      margin-top: 12px;
-      padding: 10px 14px;
-      border: none;
       border-radius: 8px;
-      background: #2563eb;
-      color: white;
-      cursor: pointer;
+      font-size: 0.95rem;
+      font-family: inherit;
     }
 
-    button:hover {
-      background: #1d4ed8;
+    textarea {
+      resize: vertical;
+      min-height: 80px;
     }
 
-    .danger {
-      background: #dc2626;
-    }
-
-    .review {
-      border: 1px solid #ddd;
-      padding: 12px;
-      border-radius: 10px;
-      margin-top: 10px;
-      background: #fafafa;
+    .search-wrap {
+      position: relative;
     }
 
     .dropdown {
@@ -83,20 +105,97 @@
       overflow-y: auto;
       position: absolute;
       width: 100%;
+      z-index: 10;
       display: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     .dropdown div {
-      padding: 8px;
+      padding: 8px 10px;
       cursor: pointer;
+      font-size: 0.93rem;
     }
 
     .dropdown div:hover {
-      background: #eee;
+      background: #fce7f3;
     }
 
-    .search-wrap {
-      position: relative;
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.92rem;
+      cursor: pointer;
+    }
+
+    .submit-btn {
+      margin-top: 14px;
+      background: #db2777;
+      color: white;
+    }
+
+    .submit-btn:hover {
+      background: #be185d;
+    }
+
+    .danger {
+      background: #dc2626;
+      color: white;
+      font-size: 0.85rem;
+      padding: 6px 10px;
+    }
+
+    .danger:hover {
+      background: #b91c1c;
+    }
+
+    .review {
+      border: 1px solid #fce7f3;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 10px;
+      background: #fff0f8;
+    }
+
+    .review b {
+      color: #9d174d;
+    }
+
+    .status {
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 14px;
+    }
+
+    .status.error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .status.ok {
+      background: #fce7f3;
+      color: #9d174d;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .muted {
+      color: #6b7280;
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 720px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      header nav {
+        justify-content: flex-start;
+      }
     }
   </style>
 </head>
@@ -104,19 +203,21 @@
 <body>
 
 <header>
-  <h2>Reviews</h2>
-  <div>
+  <h1>Reviews</h1>
+  <nav>
     <a href="index.html">Home</a>
     <a href="map.html">Map</a>
     <a href="rankings.html">Rankings</a>
     <a href="wishlist.html">Wishlist</a>
-  </div>
+  </nav>
 </header>
 
 <main>
 
+  <div id="status" class="status hidden"></div>
+
   <div class="card">
-    <h3>Add Review</h3>
+    <h2>Add Review</h2>
 
     <div class="search-wrap">
       <label>Restaurant</label>
@@ -128,14 +229,14 @@
     <input id="score" type="number" min="1" max="10" />
 
     <label>Review</label>
-    <textarea id="text"></textarea>
+    <textarea id="text" placeholder="Write your review..."></textarea>
 
-    <button onclick="submitReview()">Submit</button>
+    <button class="submit-btn" onclick="submitReview()">Submit</button>
   </div>
 
   <div class="card">
-    <h3>My Reviews</h3>
-    <div id="reviews"></div>
+    <h2>My Reviews</h2>
+    <div id="reviews"><p class="muted">Loading...</p></div>
   </div>
 
 </main>
@@ -143,9 +244,15 @@
 <script>
 let selectedRestaurantId = null;
 
-document.getElementById("search").addEventListener("input", async function() {
-  const query = this.value;
+function showStatus(msg, isError) {
+  const statusEl = document.getElementById('status');
+  statusEl.textContent = msg;
+  statusEl.className = 'status ' + (isError ? 'error' : 'ok');
+  if (!isError) setTimeout(() => statusEl.classList.add('hidden'), 3000);
+}
 
+document.getElementById("search").addEventListener("input", async function () {
+  const query = this.value;
   if (query.length < 2) return;
 
   const res = await fetch("api/restaurants/search?q=" + encodeURIComponent(query));
@@ -173,7 +280,7 @@ async function submitReview() {
   const text = document.getElementById("text").value;
 
   if (!selectedRestaurantId) {
-    alert("Select a restaurant");
+    showStatus("Please select a restaurant.", true);
     return;
   }
 
@@ -189,35 +296,53 @@ async function submitReview() {
   });
 
   if (!res.ok) {
-    alert("Error submitting review");
+    showStatus("Error submitting review.", true);
     return;
   }
 
-  alert("Review added!");
+  showStatus("Review added!", false);
+  document.getElementById("search").value = "";
+  document.getElementById("score").value = "";
+  document.getElementById("text").value = "";
+  selectedRestaurantId = null;
   loadReviews();
 }
 
 async function loadReviews() {
-  const res = await fetch("api/reviews?userId=1", {
-    credentials: "same-origin"
-  });
-
-  const data = await res.json();
   const container = document.getElementById("reviews");
-  container.innerHTML = "";
+  try {
+    const res = await fetch("api/reviews", {
+      credentials: "same-origin"
+    });
 
-  data.forEach(r => {
-    const div = document.createElement("div");
-    div.className = "review";
-    div.innerHTML = `
-      <b>${r.restaurantName || ("Restaurant " + r.restaurantId)}</b><br>
-      Score: ${r.rankingScore}<br>
-      ${r.reviewText || ""}
-      <br><br>
-      <button class="danger" onclick="deleteReview(${r.restaurantId})">Delete</button>
-    `;
-    container.appendChild(div);
-  });
+    if (res.status === 401) {
+      container.innerHTML = '<p class="muted">Log in to see your reviews.</p>';
+      return;
+    }
+
+    const data = await res.json();
+    container.innerHTML = "";
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p class="muted">No reviews yet.</p>';
+      return;
+    }
+
+    data.forEach(r => {
+      const div = document.createElement("div");
+      div.className = "review";
+      div.innerHTML = `
+        <b>${r.restaurantName || ("Restaurant " + r.restaurantId)}</b><br>
+        <span class="muted">Score: ${r.rankingScore}/10</span><br>
+        ${r.reviewText || ""}
+        <br><br>
+        <button class="danger" onclick="deleteReview(${r.restaurantId})">Delete</button>
+      `;
+      container.appendChild(div);
+    });
+  } catch (err) {
+    showStatus("Failed to load reviews.", true);
+  }
 }
 
 async function deleteReview(id) {

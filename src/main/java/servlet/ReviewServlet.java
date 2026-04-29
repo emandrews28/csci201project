@@ -20,21 +20,21 @@ public class ReviewServlet extends HttpServlet {
     private final ReviewDAO reviewDAO = new ReviewDAO();
     private final Gson gson = new Gson();
 
-    // GET - fetch all reviews for a user
+    // GET - fetch all reviews for the logged-in user (from session)
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
 
-        String userIdStr = request.getParameter("userId");
-        if (userIdStr == null) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print("{\"error\":\"userId required\"}");
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            out.print("{\"error\":\"Not logged in\"}");
             return;
         }
 
-        long userId = Long.parseLong(userIdStr);
+        long userId = (long) session.getAttribute("userId");
         List<Review> reviews = reviewDAO.findByUser(userId);
         out.print(gson.toJson(reviews));
     }
@@ -109,7 +109,7 @@ public class ReviewServlet extends HttpServlet {
             out.print("{\"error\":\"Review not found\"}");
         }
     }
-    
+
     // DELETE - delete a review
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response)
