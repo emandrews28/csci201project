@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Restaurant Reviews</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, Arial;
+      background: #f5f5f5;
+      color: #1f2937;
+    }
+
+    header {
+      background: #2563eb;
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header a {
+      color: white;
+      text-decoration: none;
+      margin-right: 12px;
+      font-weight: 600;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 24px auto;
+      padding: 16px;
+    }
+
+    .card {
+      background: white;
+      padding: 18px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    .danger {
+      background: #dc2626;
+    }
+
+    .review {
+      border: 1px solid #ddd;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 10px;
+      background: #fafafa;
+    }
+
+    .dropdown {
+      border: 1px solid #ccc;
+      background: white;
+      max-height: 150px;
+      overflow-y: auto;
+      position: absolute;
+      width: 100%;
+      display: none;
+    }
+
+    .dropdown div {
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .dropdown div:hover {
+      background: #eee;
+    }
+
+    .search-wrap {
+      position: relative;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h2>Reviews</h2>
+  <div>
+    <a href="index.html">Home</a>
+    <a href="map.html">Map</a>
+    <a href="rankings.html">Rankings</a>
+    <a href="wishlist.html">Wishlist</a>
+  </div>
+</header>
+
+<main>
+
+  <div class="card">
+    <h3>Add Review</h3>
+
+    <div class="search-wrap">
+      <label>Restaurant</label>
+      <input id="search" placeholder="Search restaurant..." />
+      <div id="dropdown" class="dropdown"></div>
+    </div>
+
+    <label>Score (1–10)</label>
+    <input id="score" type="number" min="1" max="10" />
+
+    <label>Review</label>
+    <textarea id="text"></textarea>
+
+    <button onclick="submitReview()">Submit</button>
+  </div>
+
+  <div class="card">
+    <h3>My Reviews</h3>
+    <div id="reviews"></div>
+  </div>
+
+</main>
+
+<script>
+let selectedRestaurantId = null;
+
+document.getElementById("search").addEventListener("input", async function() {
+  const query = this.value;
+
+  if (query.length < 2) return;
+
+  const res = await fetch("api/restaurants/search?q=" + encodeURIComponent(query));
+  const data = await res.json();
+
+  const dropdown = document.getElementById("dropdown");
+  dropdown.innerHTML = "";
+
+  data.forEach(r => {
+    const div = document.createElement("div");
+    div.textContent = r.name;
+    div.onclick = () => {
+      selectedRestaurantId = r.restaurantId;
+      document.getElementById("search").value = r.name;
+      dropdown.style.display = "none";
+    };
+    dropdown.appendChild(div);
+  });
+
+  dropdown.style.display = "block";
+});
+
+async function submitReview() {
+  const score = Number(document.getElementById("score").value);
+  const text = document.getElementById("text").value;
+
+  if (!selectedRestaurantId) {
+    alert("Select a restaurant");
+    return;
+  }
+
+  const res = await fetch("api/reviews", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({
+      restaurantId: selectedRestaurantId,
+      rankingScore: score,
+      reviewText: text
+    })
+  });
+
+  if (!res.ok) {
+    alert("Error submitting review");
+    return;
+  }
+
+  alert("Review added!");
+  loadReviews();
+}
+
+async function loadReviews() {
+  const res = await fetch("api/reviews?userId=1", {
+    credentials: "same-origin"
+  });
+
+  const data = await res.json();
+  const container = document.getElementById("reviews");
+  container.innerHTML = "";
+
+  data.forEach(r => {
+    const div = document.createElement("div");
+    div.className = "review";
+    div.innerHTML = `
+      <b>${r.restaurantName || ("Restaurant " + r.restaurantId)}</b><br>
+      Score: ${r.rankingScore}<br>
+      ${r.reviewText || ""}
+      <br><br>
+      <button class="danger" onclick="deleteReview(${r.restaurantId})">Delete</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+async function deleteReview(id) {
+  await fetch("api/reviews?restaurantId=" + id, {
+    method: "DELETE",
+    credentials: "same-origin"
+  });
+  loadReviews();
+}
+
+loadReviews();
+</script>
+
+</body>
+</html>
