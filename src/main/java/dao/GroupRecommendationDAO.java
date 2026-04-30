@@ -104,6 +104,59 @@ public class GroupRecommendationDAO {
         return list;
     }
 
+    public List<RecommendationGroup> getGroupsForUser(long userId) {
+        List<RecommendationGroup> results = new ArrayList<>();
+        String sql = "SELECT DISTINCT g.group_id, g.created_by, g.group_name, g.created_at " +
+                "FROM recommendation_groups g LEFT JOIN recommendation_group_members m ON g.group_id = m.group_id " +
+                "WHERE g.created_by = ? OR m.user_id = ? ORDER BY g.created_at DESC";
+        try (Connection conn = DBConnectionManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            ps.setLong(2, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    RecommendationGroup g = new RecommendationGroup();
+                    g.setGroupId(rs.getLong("group_id"));
+                    g.setCreatedBy(rs.getLong("created_by"));
+                    g.setGroupName(rs.getString("group_name"));
+                    g.setCreatedAt(rs.getTimestamp("created_at"));
+                    // optionally load members if needed
+                    results.add(g);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return results;
+    }
+
+    public boolean deleteGroup(long groupId, long requestedBy) {
+        String checkSql = "SELECT created_by FROM recommendation_groups WHERE group_id = ?";
+        String deleteSql = "DELETE FROM recommendation_groups WHERE group_id = ?";
+        try (Connection conn = DBConnectionManager.getConnection()) {
+            long creator = -1;
+            try (PreparedStatement ps = conn.prepareStatement(checkSql)) {
+                ps.setLong(1, groupId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) creator = rs.getLong("created_by");
+                    else return false; // group not found
+                }
+            }
+            if (creator != requestedBy) {
+                // only creator can delete
+                return false;
+            }
+            try (PreparedStatement del = conn.prepareStatement(deleteSql)) {
+                del.setLong(1, groupId);
+                int n = del.executeUpdate();
+                return n > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public List<RankingEntry> getRankingsForUser(long userId) {
         RankingDAO rankingDAO = new RankingDAO();
         return rankingDAO.findByUser(userId);

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Group Recommendations</title>
+    <style>
+      :root { color-scheme: light; }
+      body { margin: 0; font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f5f5f5; color: #1f2937; }
+      header { background: #7c3aed; color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+      header h1 { margin: 0; font-size: 1.2rem; line-height: 1.2; }
+      header nav { display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+      header a { color: white; text-decoration: none; font-size: 0.95rem; font-weight: 600; opacity: 0.95; }
+      header a:hover { opacity: 1; text-decoration: underline; }
+      main { max-width: 960px; margin: 24px auto; padding: 0 16px; display: grid; gap: 18px; }
+      .card { background: white; border-radius: 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08); padding: 18px; }
+      h2, h3 { margin-top: 0; }
+      .muted { color: #6b7280; font-size: 0.92rem; }
+      .status { padding: 12px; border-radius: 10px; display: none; }
+      .status.ok { display: block; background: #dcfce7; color: #166534; }
+      .status.error { display: block; background: #fee2e2; color: #991b1b; }
+      .form-grid { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
+      .search-wrap { position: relative; }
+      .dropdown { border: 1px solid #e5e7eb; background: white; max-height: 220px; overflow-y: auto; position: absolute; width: 100%; z-index: 20; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+      .dropdown-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f3f4f6; }
+      .dropdown-item:last-child { border-bottom: none; }
+      .dropdown-item:hover { background: #f3f4f6; }
+      .hidden { display: none; }
+      label { display: block; margin: 0 0 6px; font-size: 0.9rem; font-weight: 600; }
+      input { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 0.95rem; }
+      button { border: none; border-radius: 8px; padding: 10px 14px; font-size: 0.92rem; cursor: pointer; }
+      .primary { background: #7c3aed; color: white; }
+      .primary:not(:disabled):hover { background: #6d28d9; }
+      .secondary { background: #e5e7eb; color: #111827; }
+      .ranking-list { display: grid; gap: 12px; margin-top: 12px; }
+      .ranking-item { border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; background: #fafafa; }
+      .rank-badge { display: inline-block; min-width: 32px; text-align: center; padding: 4px 10px; border-radius: 999px; background: #ede9fe; color: #5b21b6; font-weight: 700; }
+      .item-title { font-size: 1rem; font-weight: 700; }
+      .item-meta { color: #6b7280; font-size: 0.9rem; margin-top: 6px; }
+      .empty { text-align: center; color: #6b7280; padding: 18px 12px; border: 1px dashed #d1d5db; border-radius: 12px; background: #fafafa; }
+      @media (max-width : 720px) { .form-grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>Group Recommendations</h1>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="rankings.html">My Rankings</a>
+        <a href="map.html">Map</a>
+        <a href="wishlist.html">Wishlist</a>
+      </nav>
+    </header>
+
+    <main>
+      <div id="status" class="status"></div>
+
+      <section class="card">
+        <h2>Create a Group</h2>
+        <p class="muted">Make a group so friends can contribute and get combined recommendations.</p>
+        <div class="form-grid">
+          <div>
+            <label for="groupName">Group Name</label>
+            <input id="groupName" type="text" placeholder="e.g. Friday Dinner Crew" />
+          </div>
+          <button id="createGroupBtn" class="primary" type="button">Create Group</button>
+        </div>
+        <div id="createdGroup" style="margin-top:12px;"></div>
+      </section>
+
+      <section class="card">
+        <h2>Manage Members</h2>
+        <p class="muted">Add or remove a user by their username.</p>
+        <div class="form-grid">
+          <div>
+            <label for="manageGroupId">Group ID</label>
+            <input id="manageGroupId" type="number" />
+          </div>
+          <div class="search-wrap">
+            <label for="memberUsername">Member Username</label>
+            <input id="memberUsername" type="text" placeholder="Search username..." autocomplete="off" />
+            <div id="memberDropdown" class="dropdown hidden"></div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:end;">
+            <button id="addMemberBtn" class="primary" type="button">Add Member</button>
+            <button id="removeMemberBtn" class="secondary" type="button">Remove Member</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>View Group Top-3 Recommendations</h2>
+        <p class="muted">Enter a group ID to see the group's top 3 restaurant recommendations.</p>
+        <div class="form-grid">
+          <div>
+            <label for="viewGroupId">Group ID</label>
+            <input id="viewGroupId" type="number" />
+          </div>
+          <button id="viewTopBtn" class="primary" type="button">Load Top 3</button>
+        </div>
+
+        <div id="topList" class="ranking-list" style="margin-top:12px;"></div>
+      </section>
+
+      <section class="card">
+        <h2>My Groups</h2>
+        <p class="muted">Groups you are a member of. Creators can delete their groups.</p>
+        <div id="myGroupsList" class="ranking-list" style="margin-top:12px;"></div>
+      </section>
+    </main>
+
+    <script>
+      const statusEl = document.getElementById('status');
+      const createBtn = document.getElementById('createGroupBtn');
+      const groupNameEl = document.getElementById('groupName');
+      const createdGroupEl = document.getElementById('createdGroup');
+      const addMemberBtn = document.getElementById('addMemberBtn');
+      const removeMemberBtn = document.getElementById('removeMemberBtn');
+      const manageGroupIdEl = document.getElementById('manageGroupId');
+      const memberUsernameEl = document.getElementById('memberUsername');
+      const memberDropdownEl = document.getElementById('memberDropdown');
+      const viewGroupIdEl = document.getElementById('viewGroupId');
+      const viewTopBtn = document.getElementById('viewTopBtn');
+      const topListEl = document.getElementById('topList');
+
+      let selectedMemberId = null;
+      let memberSearchTimer = null;
+      let currentUserId = null;
+      let friendsCache = null; // array of users the current user follows
+
+      function showStatus(message, isError = false) {
+        statusEl.textContent = message;
+        statusEl.className = 'status ' + (isError ? 'error' : 'ok');
+        if (!isError) setTimeout(() => { statusEl.className = 'status'; statusEl.textContent = ''; }, 3000);
+      }
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, (ch) => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[ch]));
+      }
+
+      // fetch session and load following (friends) list for member selection
+      async function getSession() {
+        try {
+          const res = await fetch('api/session', { credentials: 'same-origin' });
+          if (res.status === 401) return null;
+          const data = await res.json();
+          if (data && data.userId) {
+            currentUserId = data.userId;
+            // load friends/following for quick local selection
+            loadFriends();
+          }
+          return data;
+        } catch (err) { return null; }
+      }
+
+      async function loadFriends() {
+        if (!currentUserId) return;
+        try {
+          const res = await fetch(`api/follow/following?userId=${encodeURIComponent(currentUserId)}`, { credentials: 'same-origin' });
+          if (!res.ok) {
+            friendsCache = null;
+            return;
+          }
+          friendsCache = await res.json();
+        } catch (err) {
+          console.error('Failed to load friends:', err);
+          friendsCache = null;
+        }
+      }
+
+      async function createGroup() {
+        const name = groupNameEl.value.trim();
+        try {
+          const res = await fetch('api/groups', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupName: name })
+          });
+          const text = await res.text();
+          let data = {};
+          try { data = JSON.parse(text); } catch(_) {}
+          if (res.status === 401) { showStatus('You must be logged in to create a group.', true); return; }
+          if (!res.ok) { showStatus(data.error || 'Failed to create group.', true); return; }
+          showStatus('Group created successfully.');
+          createdGroupEl.innerHTML = `<div class="item-title">Created Group: <strong>ID ${data.groupId}</strong></div><div class="muted">${escapeHtml(data.groupName || '')}</div>`;
+          groupNameEl.value = '';
+          // refresh the groups list so the newly created group appears
+          loadMyGroups();
+        } catch (err) { console.error(err); showStatus('Network error while creating group.', true); }
+      }
+
+      async function modifyMember(action) {
+        const groupId = manageGroupIdEl.value && Number(manageGroupIdEl.value);
+        let userId = selectedMemberId;
+        // if user hasn't selected from dropdown, try resolving by typed username
+        if (!userId) {
+          const typed = memberUsernameEl.value && memberUsernameEl.value.trim();
+          if (typed && typed.length > 0) {
+            try {
+              const sres = await fetch('api/follow/search?q=' + encodeURIComponent(typed), { credentials: 'same-origin' });
+              if (sres.ok) {
+                const candidates = await sres.json();
+                if (Array.isArray(candidates) && candidates.length > 0) {
+                  // try to find an exact username match (case-insensitive)
+                  const match = candidates.find(u => (u.username || '').toLowerCase() === typed.toLowerCase());
+                  const chosen = match || candidates[0];
+                  if (chosen && chosen.userId) userId = chosen.userId;
+                }
+              }
+            } catch (e) {
+              console.error('Error resolving username:', e);
+            }
+          }
+        }
+        if (!groupId || !userId) { showStatus('Please provide group ID and select or type a valid member username.', true); return; }
+        try {
+          const url = `api/groups?action=${encodeURIComponent(action)}&groupId=${encodeURIComponent(groupId)}&userId=${encodeURIComponent(userId)}`;
+          const res = await fetch(url, {
+            method: 'PUT',
+            credentials: 'same-origin'
+          });
+          const text = await res.text();
+          let data = {};
+          try { data = JSON.parse(text); } catch(_) {}
+          if (!res.ok) { showStatus(data.error || 'Failed to modify member.', true); return; }
+          showStatus(data.message || 'Operation successful.');
+          // clear selection after successful op
+          selectedMemberId = null;
+          memberUsernameEl.value = '';
+          memberDropdownEl.innerHTML = '';
+          memberDropdownEl.classList.add('hidden');
+          // refresh groups to reflect potential membership changes
+          loadMyGroups();
+        } catch (err) { console.error(err); showStatus('Network error while modifying member.', true); }
+      }
+
+      function renderTop(restaurants) {
+        topListEl.innerHTML = '';
+        if (!restaurants || restaurants.length === 0) {
+          topListEl.innerHTML = '<div class="empty">No recommendations available for this group.</div>';
+          return;
+        }
+        restaurants.forEach((r, i) => {
+          const card = document.createElement('div');
+          card.className = 'ranking-item';
+          card.innerHTML = `
+            <div class="item-title"><span class="rank-badge">#${i+1}</span> ${escapeHtml(r.name || 'Restaurant')}</div>
+            <div class="item-meta">${r.address ? escapeHtml(r.address) + '<br/>' : ''}${r.cuisine ? 'Cuisine: ' + escapeHtml(r.cuisine) : ''}</div>
+          `;
+          topListEl.appendChild(card);
+        });
+      }
+
+      async function loadTop() {
+        const groupId = viewGroupIdEl.value && Number(viewGroupIdEl.value);
+        if (!groupId) { showStatus('Please enter a group ID to load recommendations.', true); return; }
+        try {
+          const res = await fetch(`api/groups?groupId=${encodeURIComponent(groupId)}`, { credentials: 'same-origin' });
+          const text = await res.text();
+          let data = [];
+          try { data = JSON.parse(text); } catch(_) {}
+          if (res.status === 400) { showStatus((data && data.error) || 'Bad request', true); return; }
+          if (!res.ok) { showStatus((data && data.error) || 'Failed to load recommendations.', true); return; }
+          renderTop(data);
+        } catch (err) { console.error(err); showStatus('Network error while loading recommendations.', true); }
+      }
+
+      // Load groups the current user belongs to
+      async function loadMyGroups() {
+        try {
+          const res = await fetch('api/groups', { credentials: 'same-origin' });
+          if (res.status === 401) {
+            // not logged in
+            document.getElementById('myGroupsList').innerHTML = '<div class="empty">Log in to view your groups.</div>';
+            return;
+          }
+          const groups = await res.json();
+          renderMyGroups(groups);
+        } catch (err) {
+          console.error(err);
+          document.getElementById('myGroupsList').innerHTML = '<div class="empty">Failed to load groups.</div>';
+        }
+      }
+
+      function renderMyGroups(groups) {
+        const el = document.getElementById('myGroupsList');
+        el.innerHTML = '';
+        if (!groups || groups.length === 0) {
+          el.innerHTML = '<div class="empty">You are not a member of any groups yet.</div>';
+          return;
+        }
+        groups.forEach(g => {
+          const card = document.createElement('div');
+          card.className = 'ranking-item';
+          card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+              <div>
+                <div class="item-title">${escapeHtml(g.groupName || '(no name)')}</div>
+                <div class="item-meta">Group ID: ${g.groupId} · Created by: ${g.createdBy || 'n/a'} · ${g.createdAt ? escapeHtml(g.createdAt) : ''}</div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button class="secondary" onclick="document.getElementById('viewGroupId').value=${g.groupId}; loadTop();">View Top</button>
+                ${g.createdBy && g.createdBy === currentUserId ? `<button class=\"danger\" onclick=\"deleteGroup(${g.groupId})\">Delete</button>` : ''}
+              </div>
+            </div>
+          `;
+          el.appendChild(card);
+        });
+      }
+
+      async function deleteGroup(groupId) {
+        if (!confirm('Delete this group? This action cannot be undone.')) return;
+        try {
+          const res = await fetch(`api/groups?groupId=${encodeURIComponent(groupId)}`, { method: 'DELETE', credentials: 'same-origin' });
+          const text = await res.text();
+          let data = {};
+          try { data = JSON.parse(text); } catch (_) {}
+          if (!res.ok) {
+            showStatus(data.error || 'Failed to delete group.', true);
+            return;
+          }
+          showStatus('Group deleted.');
+          loadMyGroups();
+        } catch (err) {
+          console.error(err);
+          showStatus('Network error while deleting group.', true);
+        }
+      }
+
+      createBtn.addEventListener('click', createGroup);
+      addMemberBtn.addEventListener('click', () => modifyMember('add'));
+      removeMemberBtn.addEventListener('click', () => modifyMember('remove'));
+      viewTopBtn.addEventListener('click', loadTop);
+
+      // small autoload if viewGroupId present in query
+      (function autoLoadFromQuery() {
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const gid = params.get('groupId');
+          if (gid) viewGroupIdEl.value = gid;
+        } catch (e) {}
+      })();
+
+      // Show friends on focus and filter them while typing. If no friend matches, fall back to global search.
+      memberUsernameEl.addEventListener('focus', () => {
+        // if we have friends cached, render them immediately
+        if (friendsCache && friendsCache.length) {
+          renderMemberDropdown(friendsCache);
+        } else {
+          // otherwise, attempt to load friends (async) then render
+          loadFriends().then(() => {
+            if (friendsCache && friendsCache.length) renderMemberDropdown(friendsCache);
+          });
+        }
+      });
+
+      memberUsernameEl.addEventListener('input', () => {
+        selectedMemberId = null;
+        clearTimeout(memberSearchTimer);
+        memberSearchTimer = setTimeout(() => {
+          const query = memberUsernameEl.value.trim().toLowerCase();
+          if (friendsCache && friendsCache.length) {
+            // filter the local friends list
+            const filtered = friendsCache.filter(u => (u.username || '').toLowerCase().includes(query));
+            if (filtered.length) {
+              renderMemberDropdown(filtered);
+              return;
+            }
+          }
+          // fallback to server search when no local friend match
+          searchMemberUser();
+        }, 250);
+      });
+
+      async function searchMemberUser() {
+        const query = memberUsernameEl.value.trim();
+        if (query.length < 2) {
+          memberDropdownEl.innerHTML = '';
+          memberDropdownEl.classList.add('hidden');
+          return;
+        }
+        try {
+          const res = await fetch('api/follow/search?q=' + encodeURIComponent(query), { credentials: 'same-origin' });
+          if (!res.ok) {
+            memberDropdownEl.innerHTML = '<div class="dropdown-item">Search failed</div>';
+            memberDropdownEl.classList.remove('hidden');
+            return;
+          }
+          let users = await res.json();
+          // Exclude the current user from search results for selection
+          if (currentUserId && Array.isArray(users)) {
+            users = users.filter(u => u.userId !== currentUserId);
+          }
+          // Limit to 10 results to keep UI snappy (same UX as friends search)
+          if (Array.isArray(users)) users = users.slice(0, 10);
+          renderMemberDropdown(users);
+        } catch (err) {
+          console.error(err);
+          memberDropdownEl.innerHTML = '<div class="dropdown-item">Network error</div>';
+          memberDropdownEl.classList.remove('hidden');
+        }
+      }
+
+      function renderMemberDropdown(users) {
+        memberDropdownEl.innerHTML = '';
+        if (!users || users.length === 0) {
+          memberDropdownEl.innerHTML = '<div class="dropdown-item">No users found.</div>';
+          memberDropdownEl.classList.remove('hidden');
+          return;
+        }
+        // Render items using the same structure as `friends.html` (bold username + muted ID)
+        users.forEach((u) => {
+          if (currentUserId && u.userId === currentUserId) return; // skip self
+          const item = document.createElement('div');
+          item.className = 'dropdown-item';
+          const name = escapeHtml(u.username || '');
+          const id = u.userId != null ? String(u.userId) : '';
+          item.innerHTML = `<span><b>${name}</b></span><div class="muted">ID: ${escapeHtml(id)}</div>`;
+          item.addEventListener('click', () => {
+            selectedMemberId = u.userId;
+            memberUsernameEl.value = u.username;
+            memberDropdownEl.classList.add('hidden');
+          });
+          memberDropdownEl.appendChild(item);
+        });
+        memberDropdownEl.classList.remove('hidden');
+      }
+
+      document.addEventListener('click', (event) => {
+        if (!memberDropdownEl.contains(event.target) && event.target !== memberUsernameEl) {
+          memberDropdownEl.classList.add('hidden');
+        }
+      });
+      // initialize session on load so friendsCache can be populated
+      (function init() {
+        getSession();
+        // load groups after a short delay to ensure session/friends loaded
+        setTimeout(loadMyGroups, 250);
+      })();
+    </script>
+  </body>
+
+</html>

@@ -90,10 +90,40 @@ public class GroupRecommendationServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // get top three recommendations
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
 
+        String groupIdStr = request.getParameter("groupId");
+        if (groupIdStr == null) {
+            // list groups for current user
+            HttpSession session = request.getSession(false);
+            if (session == null || session.getAttribute("userId") == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.print("{\"error\":\"Not logged in\"}");
+                return;
+            }
+            long userId = (long) session.getAttribute("userId");
+            List<RecommendationGroup> groups = dao.getGroupsForUser(userId);
+            out.print(gson.toJson(groups));
+            return;
+        }
+        // otherwise behave as before: return top 3 recommendations for a group
+        long groupId = Long.parseLong(groupIdStr);
+        List<Restaurant> top = manager.getTopThree(groupId);
+        out.print(gson.toJson(top));
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("application/json");
+        PrintWriter out = response.getWriter();
+
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            out.print("{\"error\":\"Not logged in\"}");
+            return;
+        }
         String groupIdStr = request.getParameter("groupId");
         if (groupIdStr == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -101,7 +131,12 @@ public class GroupRecommendationServlet extends HttpServlet {
             return;
         }
         long groupId = Long.parseLong(groupIdStr);
-        List<Restaurant> top = manager.getTopThree(groupId);
-        out.print(gson.toJson(top));
+        long userId = (long) session.getAttribute("userId");
+        boolean ok = dao.deleteGroup(groupId, userId);
+        if (ok) out.print("{\"message\":\"deleted\"}");
+        else {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            out.print("{\"error\":\"delete failed or not authorized\"}");
+        }
     }
 }
