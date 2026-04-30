@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Friends</title>
+  <style>
+    :root { color-scheme: light; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f5f5f5;
+      color: #1f2937;
+    }
+
+    header {
+      background: #db2777;
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    header h1 { margin: 0; font-size: 1.2rem; }
+
+    header nav { display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+
+    header a {
+      color: white;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      opacity: 0.95;
+    }
+
+    header a:hover { opacity: 1; text-decoration: underline; }
+
+    main { max-width: 960px; margin: 24px auto; padding: 0 16px; }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    h2 { margin: 0 0 14px; font-size: 1.1rem; }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+
+    .search-wrap { position: relative; }
+
+    .dropdown {
+      border: 1px solid #ccc;
+      background: white;
+      max-height: 200px;
+      overflow-y: auto;
+      position: absolute;
+      width: 100%;
+      z-index: 10;
+      display: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .dropdown-item {
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 0.93rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dropdown-item:hover { background: #fce7f3; }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .follow-btn { background: #db2777; color: white; }
+    .follow-btn:hover { background: #be185d; }
+
+    .unfollow-btn { background: #6b7280; color: white; }
+    .unfollow-btn:hover { background: #4b5563; }
+
+    .friend-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #fce7f3;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 10px;
+      background: #fff0f8;
+    }
+
+    .friend-card b { color: #9d174d; }
+
+    .status {
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 14px;
+    }
+
+    .status.error { background: #fee2e2; color: #991b1b; }
+    .status.ok { background: #fce7f3; color: #9d174d; }
+
+    .hidden { display: none; }
+
+    .muted { color: #6b7280; font-size: 0.92rem; }
+
+    @media (max-width: 720px) {
+      header { flex-direction: column; align-items: flex-start; }
+      header nav { justify-content: flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Friends</h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="map.html">Map</a>
+    <a href="rankings.html">Rankings</a>
+    <a href="reviews.html">Reviews</a>
+    <a href="wishlist.html">Wishlist</a>
+    <a href="photos.html">Photos</a>
+  </nav>
+</header>
+
+<main>
+
+  <div id="status" class="status hidden"></div>
+
+  <div class="card">
+    <h2>Find Users</h2>
+    <div class="search-wrap">
+      <label>Search by username</label>
+      <input id="searchInput" placeholder="Type a username..." autocomplete="off" />
+      <div id="dropdown" class="dropdown"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>People You Follow</h2>
+    <div id="followingList"><p class="muted">Loading...</p></div>
+  </div>
+
+</main>
+
+<script>
+let currentUserId = null;
+
+async function loadSession() {
+  const res = await fetch("api/session", { credentials: "same-origin" });
+  if (res.status === 401) {
+    showStatus("You need to be logged in to use this page.", true);
+    return;
+  }
+  const data = await res.json();
+  currentUserId = data.userId;
+  loadFollowing();
+}
+
+function showStatus(msg, isError) {
+  const el = document.getElementById("status");
+  el.textContent = msg;
+  el.className = "status " + (isError ? "error" : "ok");
+  if (!isError) setTimeout(() => el.classList.add("hidden"), 3000);
+}
+
+document.getElementById("searchInput").addEventListener("input", async function () {
+  const query = this.value.trim();
+  const dropdown = document.getElementById("dropdown");
+
+  if (query.length < 2) {
+    dropdown.style.display = "none";
+    return;
+  }
+
+  const res = await fetch("api/follow/search?q=" + encodeURIComponent(query), {
+    credentials: "same-origin"
+  });
+  const users = await res.json();
+
+  dropdown.innerHTML = "";
+
+  if (users.length === 0) {
+    dropdown.innerHTML = '<div class="dropdown-item muted">No users found</div>';
+    dropdown.style.display = "block";
+    return;
+  }
+
+  for (const user of users) {
+    if (user.userId === currentUserId) continue;
+
+    const statusRes = await fetch(
+      `api/follow/status?followerId=${currentUserId}&followingId=${user.userId}`,
+      { credentials: "same-origin" }
+    );
+    const statusData = await statusRes.json();
+    const alreadyFollowing = statusData.isFollowing;
+
+    const item = document.createElement("div");
+    item.className = "dropdown-item";
+    item.innerHTML = `
+      <span><b>${user.username}</b></span>
+      <button class="${alreadyFollowing ? "unfollow-btn" : "follow-btn"}"
+              onclick="toggleFollow(${user.userId}, this)">
+        ${alreadyFollowing ? "Unfollow" : "Follow"}
+      </button>
+    `;
+    dropdown.appendChild(item);
+  }
+
+  dropdown.style.display = "block";
+});
+
+document.addEventListener("click", function (e) {
+  if (!document.getElementById("searchInput").contains(e.target)) {
+    document.getElementById("dropdown").style.display = "none";
+  }
+});
+
+async function toggleFollow(targetUserId, btn) {
+  const isFollowing = btn.classList.contains("unfollow-btn");
+  const path = isFollowing ? "unfollow" : "follow";
+
+  const res = await fetch(`api/follow/${path}`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `followerId=${currentUserId}&followingId=${targetUserId}`
+  });
+
+  const data = await res.json();
+  if (data.success) {
+    if (isFollowing) {
+      btn.textContent = "Follow";
+      btn.className = "follow-btn";
+    } else {
+      btn.textContent = "Unfollow";
+      btn.className = "unfollow-btn";
+    }
+    loadFollowing();
+    showStatus(isFollowing ? "Unfollowed." : "Now following!", false);
+  } else {
+    showStatus("Something went wrong.", true);
+  }
+}
+
+async function loadFollowing() {
+  const container = document.getElementById("followingList");
+
+  const res = await fetch(`api/follow/following?userId=${currentUserId}`, {
+    credentials: "same-origin"
+  });
+
+  if (!res.ok) {
+    container.innerHTML = '<p class="muted">Could not load following list.</p>';
+    return;
+  }
+
+  const users = await res.json();
+  container.innerHTML = "";
+
+  if (users.length === 0) {
+    container.innerHTML = '<p class="muted">You are not following anyone yet.</p>';
+    return;
+  }
+
+  users.forEach(user => {
+    const div = document.createElement("div");
+    div.className = "friend-card";
+    div.innerHTML = `
+      <b>${user.username}</b>
+      <button class="unfollow-btn" onclick="toggleFollow(${user.userId}, this)">Unfollow</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+loadSession();
+</script>
+
+</body>
+</html>
