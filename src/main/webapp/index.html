@@ -189,11 +189,18 @@
             return;
           }
           const data = await res.json();
+
           if (!data.loggedIn) {
             showLoggedOut(messageEl, authArea);
             return;
           }
-          showLoggedIn(messageEl, status);
+
+          // NEW: check guest
+          if (data.isGuest) {
+            showGuestView(messageEl, authArea);
+          } else {
+            showLoggedIn(messageEl, status);
+          }
         } catch (err) {
           console.error(err);
           messageEl.textContent = 'Unable to check login status.';
@@ -202,6 +209,22 @@
           authArea.innerHTML = '<a class="button login-btn" href="login.html">Login</a>';
         }
       }
+      
+      function showGuestView(messageEl, authArea) {
+    	  messageEl.textContent = "You are browsing as a GUEST. Login to access rankings, reviews, dinner groups and more!";
+    	  messageEl.classList.remove('error');
+    	  messageEl.classList.add('success');
+
+    	  // Hide everything except map
+    	  document.querySelectorAll('.button').forEach(btn => {
+    	    if (!btn.classList.contains('map-btn')) {
+    	      btn.style.display = 'none';
+    	    }
+    	  });
+
+    	  // Replace logout with login button
+    	  authArea.innerHTML = '<a class="button login-btn" href="login.html">Login</a>';
+    	}
 
       function showLoggedOut(messageEl, authArea) {
         messageEl.textContent = 'You are not logged in.';

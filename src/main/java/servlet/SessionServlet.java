@@ -30,18 +30,41 @@ public class SessionServlet extends HttpServlet {
 
         Map<String, Object> result = new HashMap<>();
 
-        if (session == null || session.getAttribute("userId") == null) {
+        if (session == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             result.put("loggedIn", false);
+            result.put("isGuest", false);
             out.print(gson.toJson(result));
             return;
         }
 
-        result.put("loggedIn", true);
-        result.put("userId", session.getAttribute("userId"));
-        result.put("username", session.getAttribute("username"));
-        result.put("email", session.getAttribute("email"));
+        // Check guest flag
+        Boolean isGuest = (Boolean) session.getAttribute("isGuest");
 
+        // If guest
+        if (Boolean.TRUE.equals(isGuest)) {
+            result.put("loggedIn", true);
+            result.put("isGuest", true);
+            result.put("username", "Guest");
+            out.print(gson.toJson(result));
+            return;
+        }
+
+        // Normal logged-in user
+        if (session.getAttribute("userId") != null) {
+            result.put("loggedIn", true);
+            result.put("isGuest", false);
+            result.put("userId", session.getAttribute("userId"));
+            result.put("username", session.getAttribute("username"));
+            result.put("email", session.getAttribute("email"));
+            out.print(gson.toJson(result));
+            return;
+        }
+
+        // Fallback: not logged in
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        result.put("loggedIn", false);
+        result.put("isGuest", false);
         out.print(gson.toJson(result));
     }
 }

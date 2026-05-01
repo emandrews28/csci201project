@@ -415,9 +415,12 @@
   <body>
     <header>
       <h1>Nearby Restaurants Map</h1>
-      <nav>
-        <a href="index.html">Home</a> <a href="rankings.html">Rankings</a> <a href="wishlist.html">Wishlist</a> <a href="photos.html">Photos</a>
-      </nav>
+      <nav id="navBar">
+  			<a href="index.html">Home</a>
+  			<a href="rankings.html">Rankings</a>
+  			<a href="wishlist.html">Wishlist</a>
+  			<a href="photos.html">Photos</a>
+		</nav>
     </header>
     <main>
       <section class="panel">
@@ -574,7 +577,8 @@
       mapViewBtn.addEventListener('click', () => setView('map'));
       listViewBtn.addEventListener('click', () => setView('list'));
       map.on('moveend zoomend', scheduleRefresh);
-
+      let isGuestUser = false;
+      
       function setView(view) {
         currentView = view;
         mapViewBtn.classList.toggle('active', view === 'map');
@@ -833,10 +837,16 @@
           } else {
             wishBtn.textContent = '+ Wishlist';
           }
-          wishBtn.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            addToWishlist(restaurant, wishBtn);
-          });
+          if (isGuestUser) {
+        	  wishBtn.textContent = 'Login to use';
+        	  wishBtn.classList.add('added');
+        	  wishBtn.disabled = true;
+        	} else {
+        	  wishBtn.addEventListener('click', (ev) => {
+        	    ev.stopPropagation();
+        	    addToWishlist(restaurant, wishBtn);
+        	  });
+        	}
           actions.appendChild(wishBtn);
           card.appendChild(actions);
           card.addEventListener('click', () => {
@@ -897,7 +907,12 @@
             <div class="small">Cuisine: ${escapeHtml(restaurant.cuisine || 'n/a')}</div>
             <div class="small">Price: ${price}</div>
             <div class="small">${escapeHtml(restaurant.address || 'No address listed')}</div>
-            <button class="wishlist-btn ${(rankedRestaurantIds.has(restaurant.restaurantId) || wishlistRestaurantIds.has(restaurant.restaurantId)) ? 'added' : ''}" type="button" onclick="addToWishlistById(${restaurant.restaurantId})">
+            ${isGuestUser
+            	  ? '<button class="wishlist-btn added" disabled>Login to use</button>'
+            	  : `<button class="wishlist-btn ${(rankedRestaurantIds.has(restaurant.restaurantId) || wishlistRestaurantIds.has(restaurant.restaurantId)) ? 'added' : ''}" type="button" onclick="addToWishlistById(${restaurant.restaurantId})">
+            	      ${rankedRestaurantIds.has(restaurant.restaurantId) ? 'Visited & Ranked' : wishlistRestaurantIds.has(restaurant.restaurantId) ? 'On wishlist' : '+ Wishlist'}
+            	    </button>`
+            	}
             ${rankedRestaurantIds.has(restaurant.restaurantId) ? 'Visited & Ranked' : wishlistRestaurantIds.has(restaurant.restaurantId) ? 'On wishlist' : '+ Wishlist'}
           </button>
           </div>`;
@@ -1013,8 +1028,34 @@
           }
         });
       }
-      loadCuisines();
-      Promise.all([loadWishlistIds(), loadRankingIds()]).then(refreshRestaurants);
+      
+      async function adjustNavForGuest() {
+    	  try {
+    	    const res = await fetch('api/session', {
+    	      credentials: 'same-origin'
+    	    });
+
+    	    if (!res.ok) return;
+
+    	    const data = await res.json();
+
+    	    if (data.isGuest) {
+    	      isGuestUser = true;
+
+    	      const nav = document.getElementById('navBar');
+    	      nav.innerHTML = '<a href="index.html">Home</a>';
+    	    }
+    	  } catch (err) {
+    	    console.error(err);
+    	  }
+    	}
+      
+      (async function init() {
+    	  await adjustNavForGuest();
+    	  loadCuisines();
+    	  await Promise.all([loadWishlistIds(), loadRankingIds()]);
+    	  refreshRestaurants();
+    	})();
       setView('map');
     </script>
   </body>

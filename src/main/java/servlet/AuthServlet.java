@@ -12,7 +12,7 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
-@WebServlet({"/login", "/logout"})
+@WebServlet({"/login", "/logout", "/guest-login"})
 public class AuthServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -51,6 +51,11 @@ public class AuthServlet extends HttpServlet {
             handleLogout(request, response);
             return;
         }
+        
+        if ("/guest-login".equals(path)) {
+            handleGuestLogin(request, response);
+            return;
+        }
 
         response.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
@@ -80,8 +85,21 @@ public class AuthServlet extends HttpServlet {
         session.setAttribute("userId", user.getUserId());
         session.setAttribute("username", user.getUsername());
         session.setAttribute("email", user.getEmail());
+        session.setAttribute("isGuest", false);
 
         response.sendRedirect(request.getContextPath() + HOME_PAGE + "?status=logged_in");
+    }
+    
+    private void handleGuestLogin(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        HttpSession session = request.getSession(true);
+
+        // Mark session as guest
+        session.setAttribute("isGuest", true);
+        session.setAttribute("username", "Guest");
+
+        response.sendRedirect(request.getContextPath() + HOME_PAGE + "?status=guest");
     }
 
     private void handleLogout(HttpServletRequest request, HttpServletResponse response)
