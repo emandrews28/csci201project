@@ -16,3 +16,10 @@ Optionally add one more environment variable to the Tomcat launch config to cont
 PHOTO_UPLOAD_DIR = /absolute/path/to/upload/dir
 
 Images are served back to the browser through `/photos/files/*` (see `PhotoFileServlet`) — nothing in the webapp directory needs to change.
+
+## Testing Suite
+To run the testing suite:
+   - Navigate to: src/main/java/test/FullFeatureTestRunner.java
+   - Right click → Run As → Java Application
+View results:
+   - Check the Console for PASS/FAIL outputs and summary
