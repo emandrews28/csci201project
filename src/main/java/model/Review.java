@@ -6,6 +6,7 @@ public class Review {
     private long reviewId;
     private long userId;
     private long restaurantId;
+    private String restaurantName;
     private int rankingScore;
     private String reviewText;
     private Timestamp timestamp;
@@ -21,14 +22,22 @@ public class Review {
 
     public long getReviewId() { return reviewId; }
     public void setReviewId(long reviewId) { this.reviewId = reviewId; }
+
     public long getUserId() { return userId; }
     public void setUserId(long userId) { this.userId = userId; }
+
     public long getRestaurantId() { return restaurantId; }
     public void setRestaurantId(long restaurantId) { this.restaurantId = restaurantId; }
+
+    public String getRestaurantName() { return restaurantName; }
+    public void setRestaurantName(String restaurantName) { this.restaurantName = restaurantName; }
+
     public int getRankingScore() { return rankingScore; }
     public void setRankingScore(int rankingScore) { this.rankingScore = rankingScore; }
+
     public String getReviewText() { return reviewText; }
     public void setReviewText(String reviewText) { this.reviewText = reviewText; }
+
     public Timestamp getTimestamp() { return timestamp; }
     public void setTimestamp(Timestamp timestamp) { this.timestamp = timestamp; }
 }

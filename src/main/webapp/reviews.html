@@ -205,11 +205,14 @@
 <header>
   <h1>Reviews</h1>
   <nav>
-    <a href="index.html">Home</a>
-    <a href="map.html">Map</a>
-    <a href="rankings.html">Rankings</a>
-    <a href="wishlist.html">Wishlist</a>
-  </nav>
+  <a href="index.html">Home</a>
+  <a href="map.html">Map</a>
+  <a href="rankings.html">Rankings</a>
+  <a href="wishlist.html">Wishlist</a>
+  <a href="photos.html">Photos</a>
+  <a href="friends.html">Friends</a>
+  <a href="group_rankings.html">Groups</a>
+	</nav>
 </header>
 
 <main>
@@ -332,7 +335,7 @@ async function loadReviews() {
       const div = document.createElement("div");
       div.className = "review";
       div.innerHTML = `
-        <b>${r.restaurantName || ("Restaurant " + r.restaurantId)}</b><br>
+    	  <b>${r.restaurantName || selectedRestaurantName || ("Restaurant " + r.restaurantId)}</b><br>
         <span class="muted">Score: ${r.rankingScore}/10</span><br>
         ${r.reviewText || ""}
         <br><br>

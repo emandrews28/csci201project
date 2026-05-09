@@ -20,44 +20,69 @@ public class ReviewDAO {
         review.setRankingScore(rs.getInt("ranking_score"));
         review.setReviewText(rs.getString("review_text"));
         review.setTimestamp(rs.getTimestamp("timestamp"));
+
+        try {
+            review.setRestaurantName(rs.getString("restaurant_name"));
+        } catch (SQLException ignored) {}
+
         return review;
     }
 
     public Review findByUserAndRestaurant(long userId, long restaurantId) {
         String sql = """
-                SELECT review_id, user_id, restaurant_id, ranking_score, review_text, timestamp
-                FROM reviews
-                WHERE user_id = ? AND restaurant_id = ?
+                SELECT rv.review_id, rv.user_id, rv.restaurant_id,
+                       rest.name AS restaurant_name,
+                       rv.ranking_score, rv.review_text, rv.timestamp
+                FROM reviews rv
+                JOIN restaurants rest ON rv.restaurant_id = rest.restaurant_id
+                WHERE rv.user_id = ? AND rv.restaurant_id = ?
                 """;
+
         try (Connection conn = DBConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setLong(1, userId);
             stmt.setLong(2, restaurantId);
+
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) return mapReview(rs);
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return null;
     }
 
     public List<Review> findByUser(long userId) {
         String sql = """
-                SELECT review_id, user_id, restaurant_id, ranking_score, review_text, timestamp
-                FROM reviews
-                WHERE user_id = ?
+                SELECT rv.review_id, rv.user_id, rv.restaurant_id,
+                       rest.name AS restaurant_name,
+                       rv.ranking_score, rv.review_text, rv.timestamp
+                FROM reviews rv
+                JOIN restaurants rest ON rv.restaurant_id = rest.restaurant_id
+                WHERE rv.user_id = ?
+                ORDER BY rv.timestamp DESC
                 """;
+
         List<Review> reviews = new ArrayList<>();
+
         try (Connection conn = DBConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setLong(1, userId);
+
             try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) reviews.add(mapReview(rs));
+                while (rs.next()) {
+                    reviews.add(mapReview(rs));
+                }
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return reviews;
     }
 
@@ -67,12 +92,15 @@ public class ReviewDAO {
                 VALUES (?, ?, ?, ?)
                 RETURNING review_id, timestamp
                 """;
+
         try (Connection conn = DBConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setLong(1, review.getUserId());
             stmt.setLong(2, review.getRestaurantId());
             stmt.setInt(3, review.getRankingScore());
             stmt.setString(4, review.getReviewText());
+
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     review.setReviewId(rs.getLong("review_id"));
@@ -81,9 +109,11 @@ public class ReviewDAO {
                     return review;
                 }
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return null;
     }
 
@@ -93,15 +123,23 @@ public class ReviewDAO {
                 SET ranking_score = ?, review_text = ?, timestamp = CURRENT_TIMESTAMP
                 WHERE user_id = ? AND restaurant_id = ?
                 """;
+
         try (Connection conn = DBConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, review.getRankingScore());
             stmt.setString(2, review.getReviewText());
             stmt.setLong(3, review.getUserId());
             stmt.setLong(4, review.getRestaurantId());
+
             boolean updated = stmt.executeUpdate() == 1;
-            if (updated) updateRestaurantRating(review.getRestaurantId());
+
+            if (updated) {
+                updateRestaurantRating(review.getRestaurantId());
+            }
+
             return updated;
+
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -115,26 +153,37 @@ public class ReviewDAO {
                     review_count = (SELECT COUNT(*) FROM reviews WHERE restaurant_id = ?)
                 WHERE restaurant_id = ?
                 """;
+
         try (Connection conn = DBConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setLong(1, restaurantId);
             stmt.setLong(2, restaurantId);
             stmt.setLong(3, restaurantId);
             stmt.executeUpdate();
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-    
+
     public boolean deleteReview(long userId, long restaurantId) {
         String sql = "DELETE FROM reviews WHERE user_id = ? AND restaurant_id = ?";
+
         try (Connection conn = DBConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, userId);
             stmt.setLong(2, restaurantId);
 
-            return stmt.executeUpdate() > 0;
+            boolean deleted = stmt.executeUpdate() > 0;
+
+            if (deleted) {
+                updateRestaurantRating(restaurantId);
+            }
+
+            return deleted;
+
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
