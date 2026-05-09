@@ -480,6 +480,11 @@
             miles
           </label> <input id="radius" type="range" min="0" max="6" step="1" value="3" />
         </div>
+		
+		<div>
+			<label for="nameSearch">Restaurant name</label>
+			<input id="nameSearch" type="text" placeholder="Search restaurant name..." autocomplete="off" />
+		</div>
 
         <div>
           <label for="cuisineSearch">Cuisine filters</label>
@@ -580,6 +585,7 @@
       const radiusEl = document.getElementById('radius');
       const radiusValue = document.getElementById('radiusValue');
       const radiusOptions = [0.25, 0.5, 1, 2, 5, 10, 25];
+      const nameSearchEl = document.getElementById('nameSearch');
       const cuisineSearchEl = document.getElementById('cuisineSearch');
       const cuisineDropdownEl = document.getElementById('cuisineDropdown');
       const selectedCuisinesEl = document.getElementById('selectedCuisines');
@@ -606,6 +612,7 @@
       document.querySelectorAll('.price').forEach(el => {
         el.addEventListener('change', scheduleRefresh);
       });
+      nameSearchEl.addEventListener('input', () => renderRestaurants(currentRestaurants));
       cuisineSearchEl.addEventListener('input', renderCuisineDropdown);
       document.addEventListener('click', (event) => {
         if (!cuisineDropdownEl.contains(event.target) && event.target !== cuisineSearchEl) {
@@ -836,7 +843,11 @@
       }
 
       function renderRestaurants(restaurants) {
-        currentRestaurants = restaurants;
+   	  const nameQuery = nameSearchEl.value.trim().toLowerCase();
+   	  if (nameQuery) {
+   	    restaurants = restaurants.filter(r => r.name.toLowerCase().includes(nameQuery));
+   	  }
+   	  currentRestaurants = restaurants;
         activeRestaurantId = null;
         clusterGroup.clearLayers();
         markersById.clear();
