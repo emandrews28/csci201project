@@ -133,6 +133,9 @@
 
     .muted { color: #6b7280; font-size: 0.92rem; }
 
+    .profile-link { color: #9d174d; text-decoration: none; font-weight: 700; }
+    .profile-link:hover { text-decoration: underline; }
+
     @media (max-width: 720px) {
       header { flex-direction: column; align-items: flex-start; }
       header nav { justify-content: flex-start; }
@@ -230,7 +233,7 @@ document.getElementById("searchInput").addEventListener("input", async function 
     const item = document.createElement("div");
     item.className = "dropdown-item";
     item.innerHTML = `
-      <span><b>${user.username}</b></span>
+      <a href="profile.html?userId=${user.userId}" class="profile-link">${user.username}</a>
       <button class="${alreadyFollowing ? "unfollow-btn" : "follow-btn"}"
               onclick="toggleFollow(${user.userId}, this)">
         ${alreadyFollowing ? "Unfollow" : "Follow"}
@@ -299,7 +302,7 @@ async function loadFollowing() {
     const div = document.createElement("div");
     div.className = "friend-card";
     div.innerHTML = `
-      <b>${user.username}</b>
+      <a href="profile.html?userId=${user.userId}" class="profile-link">${user.username}</a>
       <button class="unfollow-btn" onclick="toggleFollow(${user.userId}, this)">Unfollow</button>
     `;
     container.appendChild(div);

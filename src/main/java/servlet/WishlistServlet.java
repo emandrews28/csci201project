@@ -35,7 +35,13 @@ public class WishlistServlet extends HttpServlet {
             return;
         }
 
-        long userId = (long) session.getAttribute("userId");
+        String userIdStr = request.getParameter("userId");
+        long userId;
+        if (userIdStr != null && !userIdStr.isBlank()) {
+            userId = Long.parseLong(userIdStr);
+        } else {
+            userId = (long) session.getAttribute("userId");
+        }
         List<Wishlist> entries = wishlistDAO.findByUser(userId);
         out.print(gson.toJson(entries));
     }

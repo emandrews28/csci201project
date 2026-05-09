@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile</title>
+  <style>
+    :root { color-scheme: light; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f5f5f5;
+      color: #1f2937;
+    }
+
+    header {
+      background: #db2777;
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    header h1 { margin: 0; font-size: 1.2rem; }
+
+    header nav { display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+
+    header a {
+      color: white;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      opacity: 0.95;
+    }
+
+    header a:hover { opacity: 1; text-decoration: underline; }
+
+    main { max-width: 960px; margin: 24px auto; padding: 0 16px; }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    /* Profile header */
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .profile-info { flex: 1; }
+
+    .profile-username {
+      margin: 0 0 6px;
+      font-size: 1.5rem;
+    }
+
+    .profile-stats { color: #6b7280; font-size: 0.95rem; }
+    .profile-stats span { margin-right: 16px; }
+
+    /* Buttons */
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .follow-btn { background: #db2777; color: white; }
+    .follow-btn:hover { background: #be185d; }
+
+    .unfollow-btn { background: #6b7280; color: white; }
+    .unfollow-btn:hover { background: #4b5563; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 12px 18px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: #f3f4f6;
+      color: #374151;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .tab-btn.active { background: #db2777; color: white; }
+    .tab-btn:hover:not(.active) { background: #e5e7eb; }
+
+    .tab-panel { display: block; }
+    .tab-panel.hidden { display: none; }
+
+    .muted { color: #6b7280; font-size: 0.92rem; }
+
+    /* Entry cards (rankings, reviews, wishlist) */
+    .entry-card {
+      border: 1px solid #fce7f3;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      background: #fff0f8;
+    }
+
+    .entry-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .rank {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #db2777;
+      min-width: 38px;
+    }
+
+    .entry-name { font-weight: 700; color: #1f2937; }
+
+    .meta { font-size: 0.85rem; color: #6b7280; margin-top: 2px; }
+
+    .score {
+      font-weight: 600;
+      color: #db2777;
+      margin-left: 8px;
+      font-size: 0.95rem;
+    }
+
+    .review-text {
+      margin: 8px 0 0;
+      font-size: 0.93rem;
+      color: #374151;
+    }
+
+    /* Photo grid */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .photo-item {
+      border-radius: 10px;
+      overflow: hidden;
+      background: #f3f4f6;
+    }
+
+    .photo-item img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+    }
+
+    .photo-caption {
+      display: block;
+      font-size: 0.8rem;
+      color: #6b7280;
+      padding: 4px 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 720px) {
+      header { flex-direction: column; align-items: flex-start; }
+      header nav { justify-content: flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1 id="pageTitle">Profile</h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="friends.html">Friends</a>
+    <a href="map.html">Map</a>
+    <a href="rankings.html">Rankings</a>
+    <a href="reviews.html">Reviews</a>
+    <a href="photos.html">Photos</a>
+  </nav>
+</header>
+
+<main>
+
+  <div class="card">
+    <div class="profile-header">
+      <div class="profile-info">
+        <h2 class="profile-username" id="profileUsername">Loading...</h2>
+        <div class="profile-stats">
+          <span id="followersCount">— followers</span>
+          <span id="followingCount">— following</span>
+        </div>
+      </div>
+      <button id="followBtn" class="follow-btn" style="display:none" onclick="toggleFollow()">Follow</button>
+    </div>
+  </div>
+
+  <div class="card tabs">
+    <button class="tab-btn active" onclick="showTab('rankings', this)">Rankings</button>
+    <button class="tab-btn" onclick="showTab('reviews', this)">Reviews</button>
+    <button class="tab-btn" onclick="showTab('photos', this)">Photos</button>
+    <button class="tab-btn" onclick="showTab('wantToTry', this)">Want to Try</button>
+  </div>
+
+  <div id="tab-rankings" class="tab-panel card">
+    <p class="muted">Loading...</p>
+  </div>
+
+  <div id="tab-reviews" class="tab-panel card hidden">
+    <p class="muted">Loading...</p>
+  </div>
+
+  <div id="tab-photos" class="tab-panel card hidden">
+    <p class="muted">Loading...</p>
+  </div>
+
+  <div id="tab-wantToTry" class="tab-panel card hidden">
+    <p class="muted">Loading...</p>
+  </div>
+
+</main>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const profileUserId = parseInt(params.get('userId'));
+let currentUserId = null;
+let isFollowing = false;
+const tabLoaded = {};
+
+async function init() {
+  if (!profileUserId) {
+    document.getElementById('profileUsername').textContent = 'No user specified.';
+    return;
+  }
+
+  const sessRes = await fetch('api/session', { credentials: 'same-origin' });
+  if (sessRes.status === 401) { window.location.href = 'login.html'; return; }
+  const sessData = await sessRes.json();
+  if (!sessData.loggedIn) { window.location.href = 'login.html'; return; }
+  currentUserId = sessData.userId;
+
+  // Fetch user info, followers, and following all at once
+  const [userRes, followersRes, followingRes] = await Promise.all([
+    fetch(`api/follow/user?userId=${profileUserId}`, { credentials: 'same-origin' }),
+    fetch(`api/follow/followers?userId=${profileUserId}`, { credentials: 'same-origin' }),
+    fetch(`api/follow/following?userId=${profileUserId}`, { credentials: 'same-origin' })
+  ]);
+
+  if (!userRes.ok) {
+    document.getElementById('profileUsername').textContent = 'User not found.';
+    return;
+  }
+
+  const user = await userRes.json();
+  const followers = await followersRes.json();
+  const following = await followingRes.json();
+
+  document.getElementById('profileUsername').textContent = user.username;
+  document.getElementById('pageTitle').textContent = user.username;
+  document.title = user.username + "'s Profile";
+  updateCounts(followers.length, following.length);
+
+  // Show follow/unfollow button only when viewing someone else's profile
+  if (currentUserId !== profileUserId) {
+    const statusRes = await fetch(
+      `api/follow/status?followerId=${currentUserId}&followingId=${profileUserId}`,
+      { credentials: 'same-origin' }
+    );
+    const statusData = await statusRes.json();
+    isFollowing = statusData.isFollowing;
+    const btn = document.getElementById('followBtn');
+    btn.style.display = '';
+    updateFollowBtn();
+  }
+
+  loadTab('rankings');
+}
+
+function updateCounts(followerCount, followingCount) {
+  document.getElementById('followersCount').textContent = followerCount + ' followers';
+  document.getElementById('followingCount').textContent = followingCount + ' following';
+}
+
+async function refreshCounts() {
+  const [followersRes, followingRes] = await Promise.all([
+    fetch(`api/follow/followers?userId=${profileUserId}`, { credentials: 'same-origin' }),
+    fetch(`api/follow/following?userId=${profileUserId}`, { credentials: 'same-origin' })
+  ]);
+  updateCounts((await followersRes.json()).length, (await followingRes.json()).length);
+}
+
+function updateFollowBtn() {
+  const btn = document.getElementById('followBtn');
+  btn.textContent = isFollowing ? 'Unfollow' : 'Follow';
+  btn.className = isFollowing ? 'unfollow-btn' : 'follow-btn';
+}
+
+async function toggleFollow() {
+  const path = isFollowing ? 'unfollow' : 'follow';
+  const res = await fetch(`api/follow/${path}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `followerId=${currentUserId}&followingId=${profileUserId}`
+  });
+  const data = await res.json();
+  if (data.success) {
+    isFollowing = !isFollowing;
+    updateFollowBtn();
+    refreshCounts();
+  }
+}
+
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.remove('hidden');
+  btn.classList.add('active');
+  if (!tabLoaded[name]) loadTab(name);
+}
+
+function loadTab(name) {
+  tabLoaded[name] = true;
+  if (name === 'rankings') loadRankings();
+  else if (name === 'reviews') loadReviews();
+  else if (name === 'photos') loadPhotos();
+  else if (name === 'wantToTry') loadWantToTry();
+}
+
+function dollars(tier) {
+  return '$'.repeat(tier);
+}
+
+async function loadRankings() {
+  const container = document.getElementById('tab-rankings');
+  const res = await fetch(`api/rankings?userId=${profileUserId}`, { credentials: 'same-origin' });
+  const rankings = await res.json();
+  if (!rankings.length) { container.innerHTML = '<p class="muted">No rankings yet.</p>'; return; }
+  container.innerHTML = rankings.map(r => `
+    <div class="entry-card">
+      <div class="entry-top">
+        <span class="rank">#${r.rankPosition}</span>
+        <div>
+          <div class="entry-name">${r.restaurantName || 'Restaurant #' + r.restaurantId}</div>
+          <div class="meta">${r.cuisine || ''}${r.priceTier ? ' · ' + dollars(r.priceTier) : ''}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function loadReviews() {
+  const container = document.getElementById('tab-reviews');
+  const res = await fetch(`api/reviews?userId=${profileUserId}`, { credentials: 'same-origin' });
+  const reviews = await res.json();
+  if (!reviews.length) { container.innerHTML = '<p class="muted">No reviews yet.</p>'; return; }
+  container.innerHTML = reviews.map(r => `
+    <div class="entry-card">
+      <div class="entry-top">
+        <div>
+          <span class="entry-name">${r.restaurantName || 'Restaurant #' + r.restaurantId}</span>
+          <span class="score">${r.rankingScore}/10</span>
+        </div>
+      </div>
+      ${r.reviewText ? `<p class="review-text">${r.reviewText}</p>` : ''}
+    </div>
+  `).join('');
+}
+
+async function loadPhotos() {
+  const container = document.getElementById('tab-photos');
+  const res = await fetch(`api/photos?userId=${profileUserId}`, { credentials: 'same-origin' });
+  const photos = await res.json();
+  if (!photos.length) { container.innerHTML = '<p class="muted">No photos yet.</p>'; return; }
+  container.innerHTML = `<div class="photo-grid">${photos.map(p => `
+    <div class="photo-item">
+      <img src="${p.imageUrl}" alt="${p.caption || ''}" loading="lazy" />
+      ${p.restaurantName ? `<span class="photo-caption">${p.restaurantName}</span>` : ''}
+      ${p.caption ? `<span class="photo-caption">${p.caption}</span>` : ''}
+    </div>
+  `).join('')}</div>`;
+}
+
+async function loadWantToTry() {
+  const container = document.getElementById('tab-wantToTry');
+  const res = await fetch(`api/wishlist?userId=${profileUserId}`, { credentials: 'same-origin' });
+  const items = await res.json();
+  if (!items.length) { container.innerHTML = '<p class="muted">Nothing on the want-to-try list yet.</p>'; return; }
+  container.innerHTML = items.map(w => `
+    <div class="entry-card">
+      <div class="entry-top">
+        <div>
+          <div class="entry-name">${w.restaurantName || 'Restaurant #' + w.restaurantId}</div>
+          <div class="meta">${w.cuisine || ''}${w.priceTier ? ' · ' + dollars(w.priceTier) : ''}</div>
+        </div>
+      </div>
+      ${w.notes ? `<p class="review-text">${w.notes}</p>` : ''}
+    </div>
+  `).join('');
+}
+
+init();
+</script>
+
+</body>
+</html>
