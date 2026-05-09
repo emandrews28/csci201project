@@ -194,6 +194,10 @@
         padding: 12px 16px;
         border-top: 1px solid #e5e7eb;
         background: #fafafa;
+        display: none;
+      }
+      .sidebar-mini.visible {
+        display: block;
       }
 
       .results {
@@ -389,6 +393,25 @@
         display: none;
       }
 
+      .legend-control {
+        background: white;
+        border-radius: 10px;
+        padding: 10px 14px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+        font-size: 0.85rem;
+        line-height: 1.8;
+        margin-bottom: 8px;
+        margin-right: 4px;
+        color: #1f2937;
+        pointer-events: auto;
+      }
+
+      .legend-control strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 0.88rem;
+      }
+
       @media (max-width : 720px) {
         header {
           flex-direction: column;
@@ -409,6 +432,8 @@
           min-height: 560px;
         }
       }
+      
+
     </style>
   </head>
 
@@ -499,7 +524,7 @@
 
       <section class="map-shell">
         <div id="map"></div>
-        <div class="sidebar-mini">
+        <div class="sidebar-mini" id="sidebarMini">
           <div id="selectedTitle">
             <strong>Select a restaurant marker</strong>
           </div>
@@ -528,6 +553,19 @@
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors'
       }).addTo(map);
+      const legend = L.control({ position: 'bottomright' });
+      legend.onAdd = function () {
+        const div = L.DomUtil.create('div', 'legend-control leaflet-control');
+        L.DomEvent.disableClickPropagation(div);
+        div.innerHTML = `
+          <strong>Marker Legend</strong>
+          <div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#22c55e;margin-right:6px;vertical-align:middle;"></span>Open now</div>
+          <div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ef4444;margin-right:6px;vertical-align:middle;"></span>Currently closed</div>
+          <div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#9ca3af;margin-right:6px;vertical-align:middle;"></span>Hours unknown</div>
+        `;
+        return div;
+      };
+      legend.addTo(map);
       const clusterGroup = L.markerClusterGroup();
       const markersById = new Map();
       const resultsEl = document.getElementById('results');
@@ -805,6 +843,7 @@
         resultsEl.innerHTML = '';
         restaurants.forEach((restaurant) => {
           const marker = L.marker([restaurant.latitude, restaurant.longitude]);
+          marker._restaurant = restaurant;
           marker.on('add', () => {
             const el = marker.getElement();
             if (el) {
@@ -812,9 +851,17 @@
             }
           });
           marker.bindPopup(buildPopupHtml(restaurant));
-          marker.on('click', () => selectRestaurant(restaurant));
+          marker.on('click', (e) => {
+        	  L.DomEvent.stopPropagation(e);
+        	  selectRestaurant(restaurant);
+        	});
           markersById.set(restaurant.restaurantId, marker);
           clusterGroup.addLayer(marker);
+          clusterGroup.on('click', (e) => {
+        	  if (e.layer && e.layer._restaurant) {
+        	    selectRestaurant(e.layer._restaurant);
+        	  }
+        	});
         });
         if (map.hasLayer(clusterGroup)) {
           map.removeLayer(clusterGroup);
@@ -853,7 +900,6 @@
           actions.appendChild(wishBtn);
           card.appendChild(actions);
           card.addEventListener('click', () => {
-            selectRestaurant(restaurant);
             if (currentView === 'map') {
               const marker = markersById.get(restaurant.restaurantId);
               if (marker) {
@@ -865,19 +911,20 @@
           resultsEl.appendChild(card);
         });
         countStatus.textContent = `${restaurants.length} restaurants in view.`;
-        if (restaurants.length === 0) {
-          selectedTitle.innerHTML = '<strong>No restaurants found</strong>';
-          selectedMeta.textContent = 'Try widening the radius or moving the map.';
-        } else {
-          selectRestaurant(restaurants[0]);
-        }
+        hideSelectedInfo();
         if (currentView === 'list') {
           setView('list');
         }
       }
 
+      function hideSelectedInfo() {
+        activeRestaurantId = null;
+        document.getElementById('sidebarMini').classList.remove('visible');
+      }
+
       function selectRestaurant(restaurant) {
         activeRestaurantId = restaurant.restaurantId;
+        document.getElementById('sidebarMini').classList.add('visible');
         selectedTitle.innerHTML = `<strong>${escapeHtml(restaurant.name)}</strong>`;
         selectedMeta.innerHTML = [
           restaurant.address ? escapeHtml(restaurant.address) : 'No address listed',
