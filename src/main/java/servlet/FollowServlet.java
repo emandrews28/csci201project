@@ -65,6 +65,20 @@ public class FollowServlet extends HttpServlet {
                 result.addProperty("isFollowing", isFollowing);
                 out.print(gson.toJson(result));
 
+            } else if ("/user".equals(path)) {
+                // Return public info (userId + username) for a single user — used by the profile page
+                long userId = Long.parseLong(req.getParameter("userId"));
+                User user = userDAO.findById(userId);
+                if (user == null) {
+                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    out.print("{\"error\":\"User not found\"}");
+                    return;
+                }
+                JsonObject obj = new JsonObject();
+                obj.addProperty("userId", user.getUserId());
+                obj.addProperty("username", user.getUsername());
+                out.print(gson.toJson(obj));
+
             } else if ("/search".equals(path)) {
                 // Search users by username partial match — used by the friends page search bar
                 String q = req.getParameter("q");

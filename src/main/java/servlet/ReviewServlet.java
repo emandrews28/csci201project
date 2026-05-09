@@ -20,7 +20,7 @@ public class ReviewServlet extends HttpServlet {
     private final ReviewDAO reviewDAO = new ReviewDAO();
     private final Gson gson = new Gson();
 
-    // GET - fetch all reviews for the logged-in user (from session)
+    // GET - fetch reviews; pass userId param to view another user's reviews, omit for own
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -34,7 +34,13 @@ public class ReviewServlet extends HttpServlet {
             return;
         }
 
-        long userId = (long) session.getAttribute("userId");
+        String userIdStr = request.getParameter("userId");
+        long userId;
+        if (userIdStr != null && !userIdStr.isBlank()) {
+            userId = Long.parseLong(userIdStr);
+        } else {
+            userId = (long) session.getAttribute("userId");
+        }
         List<Review> reviews = reviewDAO.findByUser(userId);
         out.print(gson.toJson(reviews));
     }
