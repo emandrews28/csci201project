@@ -199,20 +199,36 @@ function showStatus(msg, isError) {
   if (!isError) setTimeout(() => el.classList.add("hidden"), 3000);
 }
 
-document.getElementById("searchInput").addEventListener("input", async function () {
+let searchTimeout = null;
+let activeQuery = null;
+
+document.getElementById("searchInput").addEventListener("input", function () {
   const query = this.value.trim();
   const dropdown = document.getElementById("dropdown");
 
   if (query.length < 2) {
     dropdown.style.display = "none";
+    clearTimeout(searchTimeout);
+    activeQuery = null;
     return;
   }
+
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => performSearch(query), 300);
+});
+
+async function performSearch(query) {
+  activeQuery = query;
+  const dropdown = document.getElementById("dropdown");
 
   const res = await fetch("api/follow/search?q=" + encodeURIComponent(query), {
     credentials: "same-origin"
   });
-  const users = await res.json();
 
+  // If the user kept typing while this fetch was in flight, discard this result
+  if (query !== activeQuery) return;
+
+  const users = await res.json();
   dropdown.innerHTML = "";
 
   if (users.length === 0) {
@@ -228,6 +244,10 @@ document.getElementById("searchInput").addEventListener("input", async function 
       `api/follow/status?followerId=${currentUserId}&followingId=${user.userId}`,
       { credentials: "same-origin" }
     );
+
+    // Discard if query changed while checking follow status
+    if (query !== activeQuery) return;
+
     const statusData = await statusRes.json();
     const alreadyFollowing = statusData.isFollowing;
 
@@ -244,7 +264,7 @@ document.getElementById("searchInput").addEventListener("input", async function 
   }
 
   dropdown.style.display = "block";
-});
+}
 
 document.addEventListener("click", function (e) {
   if (!document.getElementById("searchInput").contains(e.target)) {
