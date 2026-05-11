@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reviews</title>
+
   <style>
     :root {
       color-scheme: light;
@@ -204,74 +205,95 @@
 
 <header>
   <h1>Reviews</h1>
+
   <nav>
-  <a href="index.html">Home</a>
-  <a href="map.html">Map</a>
-  <a href="rankings.html">Rankings</a>
-  <a href="wishlist.html">Wishlist</a>
-  <a href="photos.html">Photos</a>
-  <a href="friends.html">Friends</a>
-  <a href="group_rankings.html">Groups</a>
-	</nav>
+    <a href="index.html">Home</a>
+    <a href="map.html">Map</a>
+    <a href="rankings.html">Rankings</a>
+    <a href="wishlist.html">Wishlist</a>
+    <a href="photos.html">Photos</a>
+    <a href="friends.html">Friends</a>
+    <a href="group_rankings.html">Groups</a>
+  </nav>
 </header>
 
-<main>
+<main id="main-content">
 
   <div id="status" class="status hidden"></div>
 
-  <div class="card">
-    <h2>Add Review</h2>
+  <div id="review-sections">
 
-    <div class="search-wrap">
-      <label>Restaurant</label>
-      <input id="search" placeholder="Search restaurant..." />
-      <div id="dropdown" class="dropdown"></div>
+    <div class="card">
+      <h2>Add Review</h2>
+
+      <div class="search-wrap">
+        <label>Restaurant</label>
+        <input id="search" placeholder="Search restaurant..." />
+        <div id="dropdown" class="dropdown"></div>
+      </div>
+
+      <label>Score (1–10)</label>
+      <input id="score" type="number" min="1" max="10" />
+
+      <label>Review</label>
+      <textarea id="text" placeholder="Write your review..."></textarea>
+
+      <button class="submit-btn" onclick="submitReview()">Submit</button>
     </div>
 
-    <label>Score (1–10)</label>
-    <input id="score" type="number" min="1" max="10" />
+    <div class="card">
+      <h2>My Reviews</h2>
+      <div id="reviews">
+        <p class="muted">Loading...</p>
+      </div>
+    </div>
 
-    <label>Review</label>
-    <textarea id="text" placeholder="Write your review..."></textarea>
-
-    <button class="submit-btn" onclick="submitReview()">Submit</button>
-  </div>
-
-  <div class="card">
-    <h2>My Reviews</h2>
-    <div id="reviews"><p class="muted">Loading...</p></div>
   </div>
 
 </main>
 
 <script>
+
 let selectedRestaurantId = null;
 
 function showStatus(msg, isError) {
   const statusEl = document.getElementById('status');
   statusEl.textContent = msg;
   statusEl.className = 'status ' + (isError ? 'error' : 'ok');
-  if (!isError) setTimeout(() => statusEl.classList.add('hidden'), 3000);
+
+  if (!isError) {
+    setTimeout(() => statusEl.classList.add('hidden'), 3000);
+  }
 }
 
 document.getElementById("search").addEventListener("input", async function () {
+
   const query = this.value;
+
   if (query.length < 2) return;
 
-  const res = await fetch("api/restaurants/search?q=" + encodeURIComponent(query));
+  const res = await fetch(
+    "api/restaurants/search?q=" + encodeURIComponent(query)
+  );
+
   const data = await res.json();
 
   const dropdown = document.getElementById("dropdown");
+
   dropdown.innerHTML = "";
 
   data.forEach(r => {
+
     const div = document.createElement("div");
+
     div.textContent = r.name;
+
     div.onclick = () => {
       selectedRestaurantId = r.restaurantId;
       document.getElementById("search").value = r.name;
       dropdown.style.display = "none";
     };
+
     dropdown.appendChild(div);
   });
 
@@ -279,7 +301,9 @@ document.getElementById("search").addEventListener("input", async function () {
 });
 
 async function submitReview() {
+
   const score = Number(document.getElementById("score").value);
+
   const text = document.getElementById("text").value;
 
   if (!selectedRestaurantId) {
@@ -288,9 +312,15 @@ async function submitReview() {
   }
 
   const res = await fetch("api/reviews", {
+
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+
+    headers: {
+      "Content-Type": "application/json"
+    },
+
     credentials: "same-origin",
+
     body: JSON.stringify({
       restaurantId: selectedRestaurantId,
       rankingScore: score,
@@ -304,59 +334,103 @@ async function submitReview() {
   }
 
   showStatus("Review added!", false);
+
   document.getElementById("search").value = "";
   document.getElementById("score").value = "";
   document.getElementById("text").value = "";
+
   selectedRestaurantId = null;
+
   loadReviews();
 }
 
 async function loadReviews() {
+
   const container = document.getElementById("reviews");
+
   try {
+
     const res = await fetch("api/reviews", {
       credentials: "same-origin"
     });
 
-    if (res.status === 401) {
-      container.innerHTML = '<p class="muted">Log in to see your reviews.</p>';
-      return;
-    }
-
     const data = await res.json();
+
     container.innerHTML = "";
 
     if (!data || data.length === 0) {
-      container.innerHTML = '<p class="muted">No reviews yet.</p>';
+      container.innerHTML =
+        '<p class="muted">No reviews yet.</p>';
       return;
     }
 
     data.forEach(r => {
+
       const div = document.createElement("div");
+
       div.className = "review";
+
       div.innerHTML = `
-    	  <b>${r.restaurantName || selectedRestaurantName || ("Restaurant " + r.restaurantId)}</b><br>
+        <b>${r.restaurantName || ("Restaurant " + r.restaurantId)}</b><br>
         <span class="muted">Score: ${r.rankingScore}/10</span><br>
         ${r.reviewText || ""}
         <br><br>
-        <button class="danger" onclick="deleteReview(${r.restaurantId})">Delete</button>
+        <button class="danger"
+          onclick="deleteReview(${r.restaurantId})">
+          Delete
+        </button>
       `;
+
       container.appendChild(div);
     });
+
   } catch (err) {
+
     showStatus("Failed to load reviews.", true);
   }
 }
 
 async function deleteReview(id) {
+
   await fetch("api/reviews?restaurantId=" + id, {
+
     method: "DELETE",
+
     credentials: "same-origin"
   });
+
   loadReviews();
 }
 
-loadReviews();
+async function checkAuth() {
+
+  try {
+
+    const res = await fetch("api/reviews", {
+      credentials: "same-origin"
+    });
+
+    if (res.status === 401) {
+
+      document.getElementById("main-content").innerHTML = `
+        <div class="status error">
+          You must be logged in to view your reviews.
+        </div>
+      `;
+
+      return;
+    }
+
+    loadReviews();
+
+  } catch (err) {
+
+    showStatus("Failed to load page.", true);
+  }
+}
+
+checkAuth();
+
 </script>
 
 </body>

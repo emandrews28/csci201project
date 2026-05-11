@@ -314,7 +314,7 @@
 	</nav>
     </header>
 
-    <main>
+    <main id="main-content">
       <div id="status" class="status"></div>
 
       <section class="card">
@@ -386,6 +386,13 @@
           "'": '&#39;'
         } [ch]));
       }
+      function showLoggedOutMessage() {
+    	  document.getElementById("main-content").innerHTML = `
+    	    <div class="status error">
+    	      You must be logged in to view your rankings.
+    	    </div>
+    	  `;
+    	}
 
       function updateBaselineProgress(rankings) {
         const count = rankings.length;
@@ -397,31 +404,40 @@
         }
       }
       async function loadRankings() {
-        try {
-          const res = await fetch('api/rankings', {
-            credentials: 'same-origin'
-          });
-          const text = await res.text();
-          let data = [];
-          try {
-            data = JSON.parse(text);
-          } catch (_) {}
-          if (res.status === 401) {
-            showStatus('You must be logged in to view your rankings.', true);
-            rankingListEl.innerHTML = '<div class="empty">Please log in first.</div>';
-            baselineEl.textContent = '0 / 3 complete';
-            return;
-          }
-          if (!res.ok) {
-            showStatus((data && data.error) || 'Failed to load rankings.', true);
-            return;
-          }
-          renderRankings(data);
-        } catch (err) {
-          console.error(err);
-          showStatus('Network error while loading rankings.', true);
-        }
-      }
+
+    	  try {
+
+    	    const res = await fetch('api/rankings', {
+    	      credentials: 'same-origin'
+    	    });
+
+    	    if (res.status === 401 || !res.ok) {
+
+    	      showLoggedOutMessage();
+    	      return;
+    	    }
+
+    	    const text = await res.text();
+
+    	    let data = [];
+
+    	    try {
+    	      data = JSON.parse(text);
+    	    } catch (_) {}
+
+    	    renderRankings(data);
+
+    	  } catch (err) {
+
+    	    console.error(err);
+
+    	    document.getElementById("main-content").innerHTML = `
+    	      <div class="status error">
+    	        Failed to load rankings.
+    	      </div>
+    	    `;
+    	  }
+    	}
       restaurantSearchEl.addEventListener('input', () => {
         selectedRestaurantId = null;
         clearTimeout(restaurantSearchTimer);

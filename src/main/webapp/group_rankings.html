@@ -57,7 +57,7 @@
 	</nav>
     </header>
 
-    <main>
+    <main id="main-content">
       <div id="status" class="status"></div>
 
       <section class="card">
@@ -148,21 +148,44 @@
           "'": '&#39;'
         }[ch]));
       }
+      function showLoggedOutMessage() {
+    	  document.getElementById("main-content").innerHTML = `
+    	    <div class="status error">
+    	      You must be logged in to view group recommendations.
+    	    </div>
+    	  `;
+    	}
 
       // fetch session and load following (friends) list for member selection
       async function getSession() {
-        try {
-          const res = await fetch('api/session', { credentials: 'same-origin' });
-          if (res.status === 401) return null;
-          const data = await res.json();
-          if (data && data.userId) {
-            currentUserId = data.userId;
-            // load friends/following for quick local selection
-            loadFriends();
-          }
-          return data;
-        } catch (err) { return null; }
-      }
+  try {
+    const res = await fetch('api/session', {
+      credentials: 'same-origin'
+    });
+
+    if (res.status === 401 || !res.ok) {
+      showLoggedOutMessage();
+      return null;
+    }
+
+    const data = await res.json();
+
+    if (!data || !data.userId) {
+      showLoggedOutMessage();
+      return null;
+    }
+
+    currentUserId = data.userId;
+
+    loadFriends();
+
+    return data;
+
+  } catch (err) {
+    showLoggedOutMessage();
+    return null;
+  }
+}
 
       async function loadFriends() {
         if (!currentUserId) return;
