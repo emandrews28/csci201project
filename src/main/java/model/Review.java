@@ -10,6 +10,8 @@ public class Review {
     private int rankingScore;
     private String reviewText;
     private Timestamp timestamp;
+    private String restaurantAddress;
+    private String cuisine;
 
     public Review() {}
 
@@ -18,6 +20,7 @@ public class Review {
         this.restaurantId = restaurantId;
         this.rankingScore = rankingScore;
         this.reviewText = reviewText;
+        
     }
 
     public long getReviewId() { return reviewId; }
@@ -40,4 +43,20 @@ public class Review {
 
     public Timestamp getTimestamp() { return timestamp; }
     public void setTimestamp(Timestamp timestamp) { this.timestamp = timestamp; }
+    
+    public String getRestaurantAddress() {
+        return restaurantAddress;
+    }
+
+    public void setRestaurantAddress(String restaurantAddress) {
+        this.restaurantAddress = restaurantAddress;
+    }
+
+    public String getCuisine() {
+        return cuisine;
+    }
+
+    public void setCuisine(String cuisine) {
+        this.cuisine = cuisine;
+    }
 }

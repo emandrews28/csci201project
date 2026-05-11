@@ -10,6 +10,7 @@ public class RecommendationGroup {
     private String groupName;
     private Timestamp createdAt;
     private List<Long> members = new ArrayList<>();
+    private String createdByUsername;
 
     public RecommendationGroup() {}
 
@@ -24,6 +25,9 @@ public class RecommendationGroup {
     public long getCreatedBy() { return createdBy; }
     public void setCreatedBy(long createdBy) { this.createdBy = createdBy; }
 
+    public String getCreatedByUsername() { return createdByUsername; } 
+    public void setCreatedByUsername(String createdByUsername) { this.createdByUsername = createdByUsername; } 
+    
     public String getGroupName() { return groupName; }
     public void setGroupName(String groupName) { this.groupName = groupName; }
 

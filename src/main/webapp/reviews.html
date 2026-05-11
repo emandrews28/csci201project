@@ -371,15 +371,23 @@ async function loadReviews() {
       div.className = "review";
 
       div.innerHTML = `
-        <b>${r.restaurantName || ("Restaurant " + r.restaurantId)}</b><br>
-        <span class="muted">Score: ${r.rankingScore}/10</span><br>
-        ${r.reviewText || ""}
-        <br><br>
-        <button class="danger"
-          onclick="deleteReview(${r.restaurantId})">
-          Delete
-        </button>
-      `;
+    	  <b>${r.restaurantName || ("Restaurant " + r.restaurantId)}</b><br>
+
+    	  <div class="muted">
+    	    ${r.restaurantAddress ? r.restaurantAddress + "<br>" : ""}
+    	    ${r.cuisine ? "Cuisine: " + r.cuisine + "<br>" : ""}
+    	    Score: ${r.rankingScore}/10
+    	  </div>
+
+    	  <div>${r.reviewText || ""}</div>
+
+    	  <br>
+
+    	  <button class="danger"
+    	    onclick="deleteReview(${r.restaurantId})">
+    	    Delete
+    	  </button>
+    	`;
 
       container.appendChild(div);
     });

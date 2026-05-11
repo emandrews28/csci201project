@@ -106,9 +106,17 @@ public class GroupRecommendationDAO {
 
     public List<RecommendationGroup> getGroupsForUser(long userId) {
         List<RecommendationGroup> results = new ArrayList<>();
-        String sql = "SELECT DISTINCT g.group_id, g.created_by, g.group_name, g.created_at " +
-                "FROM recommendation_groups g LEFT JOIN recommendation_group_members m ON g.group_id = m.group_id " +
-                "WHERE g.created_by = ? OR m.user_id = ? ORDER BY g.created_at DESC";
+        String sql =
+        	    "SELECT DISTINCT g.group_id, g.created_by, " +
+        	    "u.username AS created_by_username, " +
+        	    "g.group_name, g.created_at " +
+        	    "FROM recommendation_groups g " +
+        	    "LEFT JOIN recommendation_group_members m " +
+        	    "ON g.group_id = m.group_id " +
+        	    "LEFT JOIN users u " +
+        	    "ON g.created_by = u.user_id " +
+        	    "WHERE g.created_by = ? OR m.user_id = ? " +
+        	    "ORDER BY g.created_at DESC";
         try (Connection conn = DBConnectionManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, userId);
@@ -118,6 +126,7 @@ public class GroupRecommendationDAO {
                     RecommendationGroup g = new RecommendationGroup();
                     g.setGroupId(rs.getLong("group_id"));
                     g.setCreatedBy(rs.getLong("created_by"));
+                    g.setCreatedByUsername(rs.getString("created_by_username"));
                     g.setGroupName(rs.getString("group_name"));
                     g.setCreatedAt(rs.getTimestamp("created_at"));
                     // optionally load members if needed

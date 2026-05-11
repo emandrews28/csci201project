@@ -25,6 +25,14 @@ public class ReviewDAO {
             review.setRestaurantName(rs.getString("restaurant_name"));
         } catch (SQLException ignored) {}
 
+        try {
+            review.setRestaurantAddress(rs.getString("restaurant_address"));
+        } catch (SQLException ignored) {}
+
+        try {
+            review.setCuisine(rs.getString("cuisine"));
+        } catch (SQLException ignored) {} 
+
         return review;
     }
 
@@ -32,6 +40,8 @@ public class ReviewDAO {
         String sql = """
                 SELECT rv.review_id, rv.user_id, rv.restaurant_id,
                        rest.name AS restaurant_name,
+rest.address AS restaurant_address,
+rest.cuisine_type AS cuisine,
                        rv.ranking_score, rv.review_text, rv.timestamp
                 FROM reviews rv
                 JOIN restaurants rest ON rv.restaurant_id = rest.restaurant_id
@@ -59,6 +69,8 @@ public class ReviewDAO {
         String sql = """
                 SELECT rv.review_id, rv.user_id, rv.restaurant_id,
                        rest.name AS restaurant_name,
+rest.address AS restaurant_address,
+rest.cuisine_type AS cuisine, 
                        rv.ranking_score, rv.review_text, rv.timestamp
                 FROM reviews rv
                 JOIN restaurants rest ON rv.restaurant_id = rest.restaurant_id

@@ -331,7 +331,9 @@
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
               <div>
                 <div class="item-title">${escapeHtml(g.groupName || '(no name)')}</div>
-                <div class="item-meta">Group ID: ${g.groupId} · Created by: ${g.createdBy || 'n/a'} · ${g.createdAt ? escapeHtml(g.createdAt) : ''}</div>
+                <div class="item-meta">
+                Group ID: ${g.groupId} · Created by: ${escapeHtml(g.createdByUsername || g.createdBy || 'n/a')} · ${g.createdAt ? escapeHtml(g.createdAt) : ''}
+              </div>
               </div>
               <div style="display:flex;gap:8px;align-items:center;">
                 <button class="secondary" onclick="document.getElementById('viewGroupId').value=${g.groupId}; loadTop();">View Top</button>
