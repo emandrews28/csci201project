@@ -129,9 +129,18 @@ public class RankingDAO {
     }
 
     public RankingEntry createRanking(RankingEntry entry) {
-        String shiftSql = """
+        final int TEMP_OFFSET = 10000;
+
+        String moveRanksToTempSql = """
                 UPDATE rankings
-                SET rank_position = rank_position + 1,
+                SET rank_position = rank_position + ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = ? AND rank_position >= ?
+                """;
+
+        String shiftRanksBackSql = """
+                UPDATE rankings
+                SET rank_position = rank_position - ? + 1,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE user_id = ? AND rank_position >= ?
                 """;
@@ -151,17 +160,21 @@ public class RankingDAO {
             int maxPos = getMaxRankPosition(conn, entry.getUserId());
             int targetPos = entry.getRankPosition();
 
-            if (targetPos < 1) {
-                targetPos = 1;
-            }
-            if (targetPos > maxPos + 1) {
-                targetPos = maxPos + 1;
+            if (targetPos < 1) targetPos = 1;
+            if (targetPos > maxPos + 1) targetPos = maxPos + 1;
+
+            try (PreparedStatement stmt = conn.prepareStatement(moveRanksToTempSql)) {
+                stmt.setInt(1, TEMP_OFFSET);
+                stmt.setLong(2, entry.getUserId());
+                stmt.setInt(3, targetPos);
+                stmt.executeUpdate();
             }
 
-            try (PreparedStatement shiftStmt = conn.prepareStatement(shiftSql)) {
-                shiftStmt.setLong(1, entry.getUserId());
-                shiftStmt.setInt(2, targetPos);
-                shiftStmt.executeUpdate();
+            try (PreparedStatement stmt = conn.prepareStatement(shiftRanksBackSql)) {
+                stmt.setInt(1, TEMP_OFFSET);
+                stmt.setLong(2, entry.getUserId());
+                stmt.setInt(3, targetPos + TEMP_OFFSET);
+                stmt.executeUpdate();
             }
 
             try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
@@ -184,6 +197,7 @@ public class RankingDAO {
 
         } catch (SQLException e) {
             e.printStackTrace();
+
             if (conn != null) {
                 try {
                     conn.rollback();
@@ -191,8 +205,10 @@ public class RankingDAO {
                     rollbackEx.printStackTrace();
                 }
             }
+
             return null;
-        } finally {
+
+        } finally  {
             if (conn != null) {
                 try {
                     conn.setAutoCommit(true);
@@ -424,6 +440,78 @@ public class RankingDAO {
                 } catch (SQLException closeEx) {
                     closeEx.printStackTrace();
                 }
+            }
+        }
+    }
+    public boolean deleteRankingById(long userId, long rankingId) {
+        String findSql = "SELECT rank_position FROM rankings WHERE user_id = ? AND ranking_id = ?";
+        String deleteSql = "DELETE FROM rankings WHERE user_id = ? AND ranking_id = ?";
+        String compressToTempSql = """
+                UPDATE rankings
+                SET rank_position = rank_position + 10000,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = ? AND rank_position > ?
+                """;
+        String compressBackSql = """
+                UPDATE rankings
+                SET rank_position = rank_position - 10001,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = ? AND rank_position > ?
+                """;
+
+        Connection conn = null;
+
+        try {
+            conn = DBConnectionManager.getConnection();
+            conn.setAutoCommit(false);
+
+            int oldPosition;
+
+            try (PreparedStatement findStmt = conn.prepareStatement(findSql)) {
+                findStmt.setLong(1, userId);
+                findStmt.setLong(2, rankingId);
+                try (ResultSet rs = findStmt.executeQuery()) {
+                    if (!rs.next()) {
+                        conn.rollback();
+                        return false;
+                    }
+                    oldPosition = rs.getInt("rank_position");
+                }
+            }
+
+            try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+                deleteStmt.setLong(1, userId);
+                deleteStmt.setLong(2, rankingId);
+                deleteStmt.executeUpdate();
+            }
+
+            try (PreparedStatement s = conn.prepareStatement(compressToTempSql)) {
+                s.setLong(1, userId);
+                s.setInt(2, oldPosition);
+                s.executeUpdate();
+            }
+
+            try (PreparedStatement s = conn.prepareStatement(compressBackSql)) {
+                s.setLong(1, userId);
+                s.setInt(2, oldPosition + 10000);
+                s.executeUpdate(); 
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace(); 
+            if (conn != null) { 
+                try { conn.rollback(); } catch (SQLException rollbackEx) { rollbackEx.printStackTrace(); }
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException closeEx) { closeEx.printStackTrace(); }
             }
         }
     }

@@ -159,18 +159,18 @@ public class RankingServlet extends HttpServlet {
             return;
         }
 
-        String restaurantIdStr = request.getParameter("restaurantId");
-        if (restaurantIdStr == null) {
+        String rankingIdStr = request.getParameter("rankingId");
+        if (rankingIdStr == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print("{\"error\":\"restaurantId required\"}");
+            out.print("{\"error\":\"rankingId required\"}");
             return;
         }
 
         long userId = (long) session.getAttribute("userId");
-        long restaurantId = Long.parseLong(restaurantIdStr);
+        long rankingId = Long.parseLong(rankingIdStr);
 
-        boolean deleted = rankingDAO.deleteRanking(userId, restaurantId);
-
+        boolean deleted = rankingDAO.deleteRankingById(userId, rankingId);
+        
         if (deleted) {
             out.print("{\"message\":\"Ranking deleted successfully\"}");
         } else {
